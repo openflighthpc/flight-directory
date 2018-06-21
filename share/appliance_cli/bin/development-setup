@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Needed for ipython.
+yum install -y -e0 python-devel
+
+# Install development dependencies.
+. venv/bin/activate
+pip install -r requirements.dev.txt
+
+# Install bats.
+sudo yum install -y epel-release
+sudo yum install -y bats
+
+# Run any child development setup scripts.
+if test -n "$(shopt -s nullglob; echo src/**/bin/development-setup)"; then
+  for script in src/**/bin/development-setup; do
+    (cd "$(dirname "$script" | xargs dirname)" && "bin/development-setup")
+  done
+fi

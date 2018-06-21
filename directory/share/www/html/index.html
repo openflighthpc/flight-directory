@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<!--
+#ALCES_META
+# Refer to `clusterware/scripts/development/propagate`.
+#path=/var/www/html/directory/index.html
+#ALCES_META_END
+-->
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Alces Flight Directory</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Theme CSS -->
+    <link href="css/directory.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css">
+
+    <link rel="shortcut icon" href="img/favicon.ico" />
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body id="page-top" class="index">
+
+    <!-- Navigation -->
+    <nav id="mainNav" class="navbar navbar-default navbar-fixed-top navbar-custom">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span> Menu <i class="fa fa-bars"></i>
+                </button>
+                <a class="navbar-brand" href="#page-top">
+                  <img src="img/brand.png" alt="">
+                  <div class="product-name">Directory</div>
+                  <!--Alces Flight Directory -->
+                </a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li class="page-scroll">
+                        <a href="#page-top"><i class="fa fa-home"></i>Home</a>
+                    </li>
+                    <li class="page-scroll">
+                        <a href="#resources"><i class="fa fa-th-large"></i>Resources</a>
+                    </li>
+                    <li class="page-scroll">
+                        <a href="#about"><i class="fa fa-info-circle"></i>About</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container-fluid -->
+    </nav>
+
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="row">
+              <div class="col-lg-12">
+                    <div class="img-wrapper">
+                      <img class="img-responsive" src="img/flight.png" alt="">
+                    </div>
+                    <div class="intro-text">
+                        <span class="name">Flight Directory</span>
+                        <hr class="star-light">
+                        <span class="skills">
+                            Perform user management tasks for your Alces Flight
+                            environment.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Resources Grid Section -->
+    <section id="resources">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <h2>Resources</h2>
+                    <hr class="star-primary">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-6 resources-item">
+                    <a href="#resourcesModal1" class="resources-link" data-toggle="modal">
+                        <div class="caption">
+                            <div class="caption-content">
+                              <i class="fa fa-search-plus fa-3x"></i>
+                              <br />
+                              Directory
+                            </div>
+                        </div>
+                        <img src="img/resources/directory.png" class="img-responsive" alt="">
+                    </a>
+                </div>
+                <div class="col-sm-6 resources-item">
+                    <a href="#resourcesModal2" class="resources-link" data-toggle="modal">
+                        <div class="caption">
+                            <div class="caption-content">
+                                <i class="fa fa-search-plus fa-3x"></i>
+                                <br />
+                                Eject
+                            </div>
+                        </div>
+                        <img src="img/resources/eject.png" class="img-responsive" alt="">
+                    </a>
+                </div>
+<!-- =RESOURCES= -->
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="success" id="about">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <h2>About</h2>
+                    <hr class="star-light">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-4 col-lg-offset-2">
+                    <p>
+                        Alces Flight Directory provides you with the
+                        ability to manage the users and groups
+                        available within your Alces Flight environment
+                        from one centralized location.
+                    </p>
+                    <p>
+                        You can create, view, modify, and delete users and
+                        groups, as well as add and remove users as members of a
+                        group. All changes you make will apply throughout your
+                        Alces Flight environment, with users and groups
+                        available on all clusters.
+                    </p>
+                </div>
+                <div class="col-lg-4">
+                  <p>
+                      Alces Flight Directory also provides you with the
+                      ability to 'export' a record of your Flight Directory
+                      configuration, to facilitate transferring your setup to a
+                      new Alces Flight Directory using the 'import' feature.
+                  </p>
+                  <p>
+                      All these features are available via the Flight Directory
+                      command-line interface, which is available using the
+                      <a
+                          href="#resourcesModal1"
+                          data-toggle="modal"
+                          style="color: #333"
+                      >
+                        access details
+                      </a>
+                      provided.
+                  </p>
+                </div>
+                <div class="col-lg-8 col-lg-offset-2 text-center">
+                    <a href="http://docs.alces-flight.com" class="btn btn-lg btn-outline">
+                        Find out more
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center">
+        <div class="footer-above">
+            <div class="container">
+                <div class="row">
+                    <div class="footer-col col-md-4">
+                      <h3>Flight Directory</h3>
+                      <p>
+                        <dl>
+                          <dt>Domain</dt>
+                          <dd><code>_DOMAIN_</code></dd>
+                        </dl>
+                        <dl>
+                          <dt>Directory release</dt>
+                          <dd><code>_RELEASE_</code></dd>
+                        </dl>
+                      </p>
+                    </div>
+                    <div class="footer-col col-md-4">
+                        <h3>Around the Web</h3>
+                        <ul class="list-inline">
+                            <li>
+                                <a href="http://alces-flight.com/" class="btn-social btn-outline"><i class="fa fa-fw fa-globe"></i></a>
+                            </li>
+                            <li>
+                                <a href="https://twitter.com/alcesflight" class="btn-social btn-outline"><i class="fa fa-fw fa-twitter"></i></a>
+                            </li>
+                            <li>
+                                <a href="https://aws.amazon.com/marketplace/seller-profile/ref=dtl_pcp_sold_by?ie=UTF8&id=8ccbd539-9605-4c22-8e09-78c2b589be28" class="btn-social btn-outline"><i class="fa fa-fw fa-amazon"></i></a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/alces-flight" class="btn-social btn-outline"><i class="fa fa-fw fa-github"></i></a>
+                            </li>
+                            <li>
+                                <a href="https://youtube.com/c/AlcesFlight" class="btn-social btn-outline"><i class="fa fa-fw fa-youtube"></i></a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="footer-col col-md-4">
+                        <h3>About Alces Flight</h3>
+                        <p>Alces Flight are a team of specialists in High Performance Computing (HPC) software for scientists, engineers and researchers.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-below">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        Copyright &copy; Alces Flight Ltd 2017
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top Button (Only visible on small and extra-small screen sizes) -->
+    <div class="scroll-top page-scroll hidden-sm hidden-xs hidden-lg hidden-md">
+        <a class="btn btn-primary" href="#page-top">
+            <i class="fa fa-chevron-up"></i>
+        </a>
+    </div>
+
+    <!-- Resources Modals -->
+    <div class="resources-modal modal fade" id="resourcesModal1" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <div class="close-modal" data-dismiss="modal">
+                <div class="lr">
+                    <div class="rl">
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 col-lg-offset-2">
+                        <div class="modal-body">
+                            <h2>Flight Directory Access</h2>
+                            <hr class="star-primary">
+                            <img src="img/resources/directory.png" class="img-responsive img-centered" alt="">
+                            <p>
+                              Alces Flight Directory is ready and waiting
+                              to help you manage the users and groups within
+                              your Alces Flight environment.
+                            </p>
+                            <p>
+                              You should log in to Flight Directory using
+                              an SSH client, such as the <code>ssh</code>
+                              command at your prompt on Linux or macOS, or with
+                              <a href="http://www.chiark.greenend.org.uk/~sgtatham/putty/"><em>PuTTY</em></a>
+                              on Windows.
+                            </p>
+                            <p>
+                                You can log in as the
+                                <code>flight</code> user, using the
+                                hostname
+                                <code><!-- _HOSTNAME_ --><!-- /_HOSTNAME_ --></code>
+                                or the IP address
+                                <code><!-- _IP_ --><!-- /_IP_ --></code>.
+                                You will need the SSH key you provided when Flight Directory
+                                was launched.
+                            </p>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">
+                                <i class="fa fa-times"></i> Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="resources-modal modal fade" id="resourcesModal2" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <div class="close-modal" data-dismiss="modal">
+                <div class="lr">
+                    <div class="rl">
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-8 col-lg-offset-2">
+                        <div class="modal-body">
+                            <h2>Eject Flight Directory Support</h2>
+                            <hr class="star-primary">
+                            <img src="img/resources/eject.png" class="img-responsive img-centered" alt="">
+                            <p>
+                                Alces Flight Directory is configured with
+                                the Directory command-line tool for managing
+                                the users and groups available within your
+                                Alces Flight environment. You are also able to
+                                access support for your Flight Directory provided by
+                                Alces Flight Ltd.
+                            </p>
+                            <p>
+                                However, if needed, you can choose to eject
+                                Flight Directory support and gain full access to
+                                <a href="https://www.freeipa.org">FreeIPA</a>
+                                as well as Linux command-line access via SSH
+                                to the Flight Directory appliance.
+                            </p>
+                            <p>
+                                If you wish to eject your Flight Directory support you
+                                should contact the
+                                <a href="mailto:support@alces-flight.com">
+                                    Alces Flight Support
+                                </a>
+                                team to be provided with an eject
+                                code. To proceed with ejection you
+                                should enter your eject code and
+                                submit the form below.
+                            </p>
+                            <p>
+                                <strong>
+                                    This will opt you out from any obligation
+                                    for Alces Flight Ltd to provide you with
+                                    support for Flight Directory.
+                                </strong>
+                            </p>
+                            <p>
+                                <form id="eject-form" class="form-inline">
+                                    <div class="form-group">
+                                        <input
+                                            name="code"
+                                            id="eject-code-input"
+                                            type="text"
+                                            placeholder="Eject code"
+                                            required
+                                            class="form-control"
+                                        />
+                                    </div>
+                                    <button type="submit" class="btn btn-danger">Eject</button>
+                                </form>
+                                <span id='eject-result'></span>
+                            </p>
+                            <button type="button" class="btn btn-default" data-dismiss="modal">
+                                <i class="fa fa-times"></i> Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- =MODALS= -->
+
+    <!-- jQuery -->
+    <script src="vendor/jquery/jquery.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="vendor/bootstrap/js/bootstrap.min.js"></script>
+
+    <!-- Plugin JavaScript -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script>
+
+    <!-- Theme JavaScript -->
+    <script src="js/flight.min.js"></script>
+
+    <!-- Flight Directory JavaScript -->
+    <script src="js/directory.js"></script>
+</body>
+
+</html>

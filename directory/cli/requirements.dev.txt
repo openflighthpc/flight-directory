@@ -1,0 +1,12 @@
+decorator==4.0.11
+ipython-genutils==0.1.0
+ipython==5.3.0
+pexpect==4.2.1
+pickleshare==0.7.4
+ptyprocess==0.5.1
+py==1.4.32
+Pygments==2.2.0
+pytest-mock==1.5.0
+pytest==3.0.5
+simplegeneric==0.8.1
+traitlets==4.3.2

@@ -1,0 +1,334 @@
+#!/bin/bash
+#ALCES_META
+# Refer to `clusterware/scripts/development/propagate`.
+#path=/opt/directory/bin/directory
+#ALCES_META_END
+
+RED='\033[0;31m'
+PURPLE='\033[0;35m'
+BOLD='\033[1m'
+NC='\033[0m'
+GREEN='\033[0;32m'
+
+setup() {
+    local a xdg_config
+    IFS=: read -a xdg_config <<< "${XDG_CONFIG_HOME:-$HOME/.config}:${XDG_CONFIG_DIRS:-/etc/xdg}"
+    for a in "${xdg_config[@]}"; do
+        if [ -e "${a}"/clusterware/config.rc ]; then
+            source "${a}"/clusterware/config.rc
+            break
+        fi
+    done
+    if [ -z "${cw_ROOT}" ]; then
+        echo "$0: unable to locate clusterware configuration"
+        exit 1
+    fi
+    kernel_load
+}
+
+doing() {
+    pad=12
+    printf "   ${PURPLE}> ${NC} %${pad}s ... " "$1"
+}
+
+say_done() {
+    if [ $1 -gt 0 ]; then
+        echo -e "${RED}FAIL${NC}"
+        exit 1
+    else
+        echo -e "${GREEN}OK${NC}"
+    fi
+}
+
+setup_set_info() {
+    local parts config
+    parts=($(hostname -i| tr '.' " "))
+    config=/opt/directory/etc/config
+
+    DOMAIN=`hostname -d`
+    REALM=`echo $DOMAIN | sed -e 's/\(.*\)/\U\1/'`
+    FORWARDER=`grep nameserver /etc/resolv.conf | awk 'NR==1{print $2}'`
+    REVERSEZONE="${parts[1]}.${parts[0]}.in-addr.arpa."
+    IPAPASSWORD=$(echo $(apg -M l -m5 -x5 -n3 -a0) | tr ' ' '-')
+    TRIGGERPASSWORD=$(dd if=/dev/urandom bs=48 count=1 2>/dev/null | base64 | cut -c1-16)
+    DIRECTORYIP=$(network_get_iface_address eth1)
+    DOMAIN_NETWORK_PREFIX=$(echo "$DIRECTORYIP" | cut -f1-2 -d'.')
+    mkdir -p /opt/directory/etc
+    touch $config /opt/clusterware/etc/signal.rc
+    chmod 0640 $config /opt/clusterware/etc/signal.rc
+    echo "IPAPASSWORD=$IPAPASSWORD" >> $config
+    echo "TRIGGERPASSWORD=$TRIGGERPASSWORD" >> $config
+    echo "cw_SIGNAL_data=\"Administrator password: ${IPAPASSWORD}\"" > /opt/clusterware/etc/signal.rc
+}
+
+setup_routing_config() {
+    # Special routing to the infrastructure subnet is only required within EC2
+    if network_is_ec2; then
+        cat <<EOF >/etc/sysconfig/network-scripts/route-eth1
+ADDRESS0=${DOMAIN_NETWORK_PREFIX}.128.0
+NETMASK0=255.255.128.0
+GATEWAY0=${DOMAIN_NETWORK_PREFIX}.130.1
+EOF
+        ip route add ${DOMAIN_NETWORK_PREFIX}.128.0/17 via ${DOMAIN_NETWORK_PREFIX}.130.1
+    fi
+    if grep -q "^PEERDNS" /etc/sysconfig/network-scripts/ifcfg-eth0; then
+        sed -i -e "s/^PEERDNS.*$/PEERDNS=\"no\"/g" \
+            /etc/sysconfig/network-scripts/ifcfg-eth0
+    else
+        cat <<EOF >>/etc/sysconfig/network-scripts/ifcfg-eth0
+PEERDNS="no"
+EOF
+    fi
+}
+
+setup_ipa_install() {
+    if [ -f /opt/directory/etc/directory.rc ]; then
+        source /opt/directory/etc/directory.rc
+    fi
+    ipa-server-install \
+        -a "$IPAPASSWORD" \
+        --hostname=`hostname -f` \
+        -r "$REALM" \
+        -p "$IPAPASSWORD" \
+        -n "$DOMAIN" \
+        --no-ntp \
+        --setup-dns \
+        --forwarder="${directory_FORWARDER:-$FORWARDER}" \
+        --reverse-zone="$REVERSEZONE" \
+        --ssh-trust-dns \
+        --unattended \
+        --ip-address="$DIRECTORYIP" \
+        "${directory_IPA_ARGS[@]}"
+}
+
+ipa_setup_ssl() {
+    # issue cert
+    yum install -y -e0 mod_ssl
+    rm -f /etc/httpd/conf.d/ssl.conf
+    sed -i -e "s/^Listen 443/Listen ${DIRECTORYIP}:443/g" \
+        -e "s/_default_/${DIRECTORYIP}/g" \
+        /etc/httpd/conf.d/nss.conf
+    /opt/clusterware/libexec/share/allocate-ssl-certificate "$(hostname -f | cut -f1-2 -d'.')"
+    . /opt/clusterware/etc/access.rc
+    sed -e "s/_INTERNAL-NAME_/$(hostname -f)/g" \
+        -e "s/_EXTERNAL-NAME_/${cw_ACCESS_fqdn}/g" \
+        -e "s/_ESCAPED-EXTERNAL-NAME_/$(echo "${cw_ACCESS_fqdn}" | sed 's/\./\\\\./g')/g" \
+        -e "s/_ESCAPED-DOMAIN-NETWORK-PREFIX_/$(echo "${DOMAIN_NETWORK_PREFIX}" | sed 's/\./\\\\./g')/g" \
+        /opt/directory/share/ipa-rewrite.conf.tpl > /etc/httpd/conf.d/ipa-rewrite.conf
+    sed -e "s/_INTERNAL-NAME_/$(hostname -f)/g" \
+        -e "s/_EXTERNAL-NAME_/${cw_ACCESS_fqdn}/g" \
+        -e "s/_ESCAPED-EXTERNAL-NAME_/$(echo "${cw_ACCESS_fqdn}" | sed 's/\./\\\\./g')/g" \
+        -e "s/_INTERNALIP_/$(network_get_iface_address eth0)/g" \
+        /opt/directory/share/flight-directory-ssl.conf.tpl > /etc/httpd/conf.d/flight-directory-ssl.conf
+}
+
+ipa_host_config() {
+    echo $IPAPASSWORD | kinit admin
+    ipa config-mod --defaultshell /bin/bash
+    ipa config-mod --homedirectory /home
+    ipa group-add ClusterUsers --desc="Generic Cluster Users"
+    ipa group-add AdminUsers --desc="Admin Cluster Users"
+    ipa config-mod --defaultgroup ClusterUsers
+    ipa pwpolicy-mod --maxlife=999
+    ipa user-add flightuser --first Alces --last Flight --random
+    ipa group-add-member AdminUsers --users flightuser
+    ipa hbacrule-disable allow_all
+    ipa hostgroup-add usernodes --desc "All nodes allowing standard user access"
+    ipa hostgroup-add adminnodes --desc "All nodes allowing only admin user access"
+    ipa hbacrule-add adminaccess --desc "Allow admin access to admin hosts"
+    ipa hbacrule-add useraccess --desc "Allow user access to user hosts"
+    ipa hbacrule-add-service adminaccess --hbacsvcs sshd
+    ipa hbacrule-add-service useraccess --hbacsvcs sshd
+    ipa hbacrule-add-user adminaccess --groups AdminUsers
+    ipa hbacrule-add-user useraccess --groups ClusterUsers
+    ipa hbacrule-add-host adminaccess --hostgroups adminnodes
+    ipa hbacrule-add-host useraccess --hostgroups usernodes
+    # Add the required HBAC services for use with an Alces Access Manager appliance
+    ipa hbacsvc-add alces-access-manager-daemon
+    ipa hbacrule-add --hostcat=all --usercat=all alces-access-manager
+    ipa hbacrule-add-service alces-access-manager --hbacsvcs=alces-access-manager-daemon
+    # Add the required HBAC services for use with an Alces Storage Manager appliance
+    ipa hbacsvc-add alces-storage-manager-daemon
+    ipa hbacrule-add --hostcat=all --usercat=all alces-storage-manager
+    ipa hbacrule-add-service alces-storage-manager --hbacsvcs=alces-storage-manager-daemon
+    ipa sudorule-add --cmdcat=all All
+    ipa sudorule-add-user --groups=adminusers All
+    ipa sudorule-mod All --hostcat='all'
+    ipa sudorule-add-option All --sudooption '!authenticate'
+}
+
+ipa_hadder_config() {
+    ipa user-add --first=Host --last=Adder hadder
+    ipa privilege-add "Add computers" --desc "Add computers"
+    ipa privilege-add-permission "Add computers" --permissions="System: Add Hosts"
+    ipa privilege-add-permission "Add computers" --permissions="System: Add DNS Entries"
+    ipa privilege-add-permission "Add computers" --permissions="System: Read DNS Entries"
+    ipa privilege-add-permission "Add computers" --permissions="System: Modify Hosts"
+    ipa privilege-add-permission "Add computers" --permissions="System: Manage Host Enrollment Password"
+    ipa privilege-add-permission "Add computers" --permissions="System: Manage Host Keytab"
+    ipa privilege-add-permission "Add computers" --permissions="System: Read Hostgroups"
+    ipa privilege-add-permission "Add computers" --permissions="System: Add Hostgroups"
+    ipa privilege-add-permission "Add computers" --permissions="System: Read Hostgroup Membership"
+    ipa privilege-add-permission "Add computers" --permissions="System: Modify Hostgroup Membership"
+    ipa privilege-add-permission "Add computers" --permissions="System: Remove Hosts"
+    ipa privilege-add-permission "Add computers" --permissions="System: Remove DNS Entries"
+    ipa privilege-add-permission "Add computers" --permissions="System: Update DNS Entries"
+    ipa role-add "Host Adder" --desc="Can add new hosts"
+    ipa role-add-privilege "Host Adder" --privilege="Add computers"
+    ipa role-add-member "Host Adder" --user=hadder
+}
+
+user_manager_config() {
+    ipa user-add --first=User --last=Manager umanager
+    ipa role-add-member "User Administrator" --user=umanager
+}
+
+ipa_keytab_gen() {
+    ipa-getkeytab -s `hostname` -p hadder@$REALM -k /opt/directory/etc/hadder.keytab
+    ipa-getkeytab -s `hostname` -p umanager@$REALM -k /opt/directory/etc/umanager.keytab
+}
+
+setup_trigger() {
+    echo "alces:${TRIGGERPASSWORD}" > /opt/clusterware/var/lib/triggers/.credentials
+}
+
+setup_directory_site() {
+    local directory_release eject_password_file auth_password_file \
+    ipa_block_config
+
+    # ejector user needs to own this directory and children for suexec of eject
+    # script to work.
+    chown -R ejector:ejector /var/www/eject/
+
+    # Create file with IPA password to be read by eject CGI script.
+    eject_password_file=/opt/directory/etc/eject_password
+    echo "$IPAPASSWORD" > "$eject_password_file"
+    chown ejector:ejector "$eject_password_file"
+    chmod 400 "$eject_password_file"
+
+    # Create Apache password file for password needed to access Directory
+    # record; uses `flight` user and IPA password.
+    auth_password_file=/etc/httpd/conf/passwd
+    htpasswd -bc /etc/httpd/conf/passwd flight "$IPAPASSWORD"
+    chown apache:apache "$auth_password_file"
+    chmod 400 "$auth_password_file"
+
+    # Install ipa-blocking httpd config.
+    . /opt/clusterware/etc/access.rc
+    sed \
+        -e "s/_EXTERNAL-NAME_/${cw_ACCESS_fqdn}/g" \
+        -e "s/_ESCAPED-EXTERNAL-NAME_/$(echo "${cw_ACCESS_fqdn}" | sed 's/\./\\\\./g')/g" \
+        -e "s/_ESCAPED-DOMAIN-NETWORK-PREFIX_/$(echo "${DOMAIN_NETWORK_PREFIX}" | sed 's/\./\\\\./g')/g" \
+        /opt/directory/share/ipa-block.conf.tpl > /etc/httpd/conf.d/00-ipa-block.conf
+
+    directory_release="$(\
+        grep :flightapplianceversion: /etc/alces-imageware.yaml | \
+        cut -d ' ' -f 2 | \
+        sed "s/'//g" \
+    )"
+
+    # Substitute variables in Directory site.
+    sed -i \
+        -e "s,<!-- _HOSTNAME_ -->.*<!-- /_HOSTNAME_ -->,<!-- _HOSTNAME_ -->${cw_ACCESS_fqdn}<!-- /_HOSTNAME_ -->,g" \
+        -e "s,<!-- _IP_ -->.*<!-- /_IP_ -->,<!-- _IP_ -->$(network_get_public_address)<!-- /_IP_ -->,g" \
+        -e "s/_DOMAIN_/${DOMAIN}/g" \
+        -e "s#_RELEASE_#${directory_release}#g" \
+        /var/www/html/directory/index.html
+
+    systemctl restart httpd
+}
+
+push_config() {
+    _S3CMD=/opt/clusterware/opt/s3cmd/s3cmd
+    sed -e "s#_TRIGGERAUTH_#alces:$TRIGGERPASSWORD#g" \
+        -e "s/_DIRECTORYIP_/$DIRECTORYIP/g" \
+        /opt/directory/share/join.tpl > /tmp/join
+    source /opt/clusterware/etc/cluster-customizer.rc
+    args=()
+    if [ -z $cw_CLUSTER_CUSTOMIZER_access_key_id ]; then
+      source /opt/clusterware/etc/config/cluster/instance-aws.rc
+      bucket="s3://alces-flight-${cw_INSTANCE_aws_account_hash}"
+
+      source /opt/clusterware/etc/config/cluster/instance-aws-iam.rc
+      args+=(--access_key="${cw_INSTANCE_aws_iam_role_access_key_id}")
+      args+=(--secret_key="${cw_INSTANCE_aws_iam_role_secret_access_key}")
+      args+=(--access_token="${cw_INSTANCE_aws_iam_role_security_token}")
+    else
+      args+=(--access_key="${cw_CLUSTER_CUSTOMIZER_access_key_id}")
+      args+=(--secret_key="${cw_CLUSTER_CUSTOMIZER_secret_access_key}")
+    fi
+
+    $_S3CMD "${args[@]}" \
+            put /tmp/join \
+            ${bucket:-${cw_CLUSTER_CUSTOMIZER_bucket}}/customizer/domain-${DOMAIN}/configure.d/00-register
+    rm -f /tmp/join
+}
+
+main() {
+    if [ -f /opt/directory/etc/config ];
+    then
+        echo "System has previously been configured"
+        exit 1
+    fi
+
+    mkdir -p /var/log/flight-directory
+
+    doing 'Gathering setup data'
+    setup_set_info >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    doing 'Updating routing configuration'
+    setup_routing_config >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    doing 'Installing IPA server'
+    setup_ipa_install >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    doing 'Setting up external SSL access'
+    ipa_setup_ssl >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    doing 'Generating configuration'
+    ipa_host_config >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    doing 'Creating `hostadder` user'
+    ipa_hadder_config >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    doing 'Creating `umanager` user'
+    user_manager_config >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    doing 'Generating keytabs'
+    ipa_keytab_gen >> /var/log/flight-directory/setup.log 2>&1
+    touch /opt/directory/configured
+    say_done 0
+
+    doing 'Setting up Trigger scripts'
+    setup_trigger >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    doing 'Setting up directory CLI'
+    imageware_setup_cli directory /var/www/html >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    doing 'Setting up directory site'
+    setup_directory_site >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    doing 'Pushing configuration to S3'
+    push_config >> /var/log/flight-directory/setup.log 2>&1
+    say_done 0
+
+    printf "\n------------------------------------------\n"
+    printf "${BOLD}Directory installation complete${NC}\n"
+    printf "  ${PURPLE}hostname:${NC} `hostname -f`\n"
+}
+
+setup
+require network
+require imageware-setup
+
+main "$@"

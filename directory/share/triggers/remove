@@ -1,0 +1,135 @@
+#!/bin/bash
+
+clientname=$1
+cluster=$2
+
+keytab=/opt/directory/etc/hadder.keytab
+keyuser=hadder
+domain=$(hostname -d)
+realm=$(echo `hostname -d` | sed -e 's/\(.*\)/\U\1/')
+reversezone="`hostname -i | cut -d . -f 3`.`hostname -i | cut -d . -f 2`.`hostname -i | cut -d . -f 1`.in-addr.arpa."
+
+purge_hostgroup_entry() {
+
+    if [ -z $cluster ];
+    then
+        if [ "$(ipa hostgroup-show usernodes | grep $clientname.$domain)" ];
+        then
+            ipa hostgroup-remove-member usernodes --hosts=$clientname.$domain
+        fi
+    elif [ ! -z $cluster ];
+    then
+        if [ "$(ipa hostgroup-show usernodes | grep $clientname.$cluster.$domain)" ];
+        then
+            ipa hostgroup-remove-member usernodes --hosts=$clientname.$cluster.$domain
+        fi
+    fi
+
+}
+
+purge_reverse_records() {
+
+    if [ -z $cluster ];
+    then
+        until [ ! "$(ipa dnsrecord-find $reversezone | grep "$clientname.$domain")" ];
+        do
+            recordname=$(ipa dnsrecord-find $reversezone |
+                           grep -B 1 "${clientname}.${domain}" |
+                           grep "Record\ name:" |
+                           awk '{print $3}')
+            ptr="${clientname}.${domain}."
+            ipa dnsrecord-del $reversezone $recordname \
+                --ptr-rec=${ptr}
+        done
+    elif [ ! -z $cluster ];
+    then
+        until [ ! "$(ipa dnsrecord-find $reversezone | grep "$clientname.$cluster.$domain")" ];
+        do
+            recordname=$(ipa dnsrecord-find $reversezone |
+                         grep -B 1 "${clientname}.${cluster}.${domain}" |
+                         grep "Record\ name:" |
+                         awk '{print $3}')
+            ptr="${clientname}.${cluster}.${domain}."
+            ipa dnsrecord-del $reversezone $recordname \
+                --ptr-rec=${ptr}
+        done
+    fi
+
+}
+
+check_node() {
+
+    purge_hostgroup_entry > /dev/null 2>&1
+    purge_reverse_records > /dev/null 2>&1
+    if [ -z $cluster ];
+    then
+      domainrecords=$(ipa dnsrecord-find $domain $clientname |
+                      grep "${clientname}" |
+                      awk '{print $3}')
+    elif [ ! -z $cluster ];
+    then
+      domainrecords=$(ipa dnsrecord-find $cluster.$domain $clientname |
+                      grep "${clientname}" |
+                      awk '{print $3}')
+    fi
+    if [ "$domainrecords" == "$clientname" ];
+    then
+      echo "OK"
+      remove_node >> /dev/null
+    elif [ -z "$domainrecords" ];
+    then
+        echo "FAIL - NO ENTRY EXISTS"
+        exit 0
+    fi
+
+}
+
+remove_node() {
+
+    if [ -z $cluster ];
+    then
+        ipa dnsrecord-del $domain $clientname --del-all
+        ipa host-del $clientname.$domain --updatedns --continue
+    elif [ ! -z $cluster ];
+    then
+        ipa dnsrecord-del $cluster.$domain $clientname --del-all
+        ipa host-del $clientname.$cluster.$realm --updatedns --continue
+        RECORDS=$(ipa dnsrecord-find $cluster.$domain |
+                  grep -v "Record\ name\:\ \@" |
+                  grep -v "Record\ name\:\ _kerberos" |
+                  grep -v "NS\ record\"\ directory.$domain" |
+                  grep -v "TXT\ record\:\ $realm" |
+                  grep "Record\ name:" |
+                  awk '{print $3}' |
+                  wc -l)
+        if [ "$RECORDS" -eq 0 ];
+        then
+          remove_cluster
+        fi
+    fi
+
+}
+
+remove_cluster() {
+
+    if [ ! -z $cluster ];
+    then
+        if [ "$(ipa dnszone-find | grep "${cluster}.${domain}." | awk '{print $3}')" == "${cluster}.${domain}." ];
+        then
+            # Remove the cluster from the realm
+            ipa dnsrecord-del $realm $cluster --del-all
+            ipa dnszone-del $cluster.$realm > /dev/null 2>&1
+        fi
+    fi
+
+}
+
+if [ -z $clientname ];
+then
+    echo "One or more settings not provided"
+    echo "Usage: $0 <client name> <cluster>"
+    exit 0
+else
+    kinit -kt $keytab $keyuser@$realm
+    check_node
+fi

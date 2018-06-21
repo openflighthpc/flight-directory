@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Install Python 3 and Virtualenv.
+sudo yum install -y https://centos7.iuscommunity.org/ius-release.rpm
+sudo yum install -y python35u python35u-pip
+sudo pip3.5 install virtualenv
+
+# Setup Virtualenv.
+if [ ! -d venv ]; then
+  virtualenv venv
+fi
+
+# Install dependencies.
+. venv/bin/activate
+pip install -r requirements.txt
+
+# Run any child setup scripts.
+if test -n "$(shopt -s nullglob; echo src/**/bin/setup)"; then
+  for script in src/**/bin/setup; do
+    (cd "$(dirname "$script" | xargs dirname)" && "bin/setup")
+  done
+fi

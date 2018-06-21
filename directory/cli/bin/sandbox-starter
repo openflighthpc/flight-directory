@@ -1,0 +1,5 @@
+#!/bin/bash
+
+CLI_DIR=/opt/directory/cli
+
+(cd "$CLI_DIR" && bin/starter sandbox)

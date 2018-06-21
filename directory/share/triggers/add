@@ -1,0 +1,113 @@
+#!/bin/bash
+
+keytab=/opt/directory/etc/hadder.keytab
+keyuser=hadder
+
+clientname=$1
+clientip=$2
+onetimepass=$3
+cluster=$4
+directoryappliance=`hostname -f`
+domain=`hostname -d`
+realm=$(echo $domain | sed -e 's/\(.*\)/\U\1/')
+
+check_cluster() {
+
+  if [ -z $cluster ]; then
+    fqdn="${clientname}.${domain}"
+    cluster_domain="${domain}"
+  elif [ ! -z $cluster ]; then
+    fqdn="${clientname}.${cluster}.${domain}"
+    cluster_domain="${cluster}.${domain}"
+    if [ ! "$(ipa dnszone-find | grep "${cluster_domain}." | awk '{print $3}')" ]; then
+      ipa dnszone-add ${cluster_domain} \
+          --name-server ${directoryappliance}. \
+          >> /dev/null 2>&1
+      ipa dnsrecord-add ${domain} ${cluster} \
+          --ns-rec=${directoryappliance}. \
+          >> /dev/null 2>&1
+    fi
+  fi
+  check_node
+
+}
+
+cluster_hostgroup() {
+
+  if [ -z $cluster ]; then
+    if [ ! "$(ipa hostgroup-find | grep "Host-group" | grep "${domain}")" ]; then
+      ipa hostgroup-add ${domain} \
+          --desc "Host group for ${domain} infrastructure hosts"
+    fi
+  elif [ ! -z $cluster ]; then
+    if [ ! "$(ipa hostgroup-find | grep "Host-group" | grep "${cluster}")" ]; then
+      ipa hostgroup-add ${cluster}.${domain} \
+          --desc "Host group for ${cluster} cluster hosts"
+    fi
+  fi
+
+}
+
+check_node() {
+
+    dns_zones=$(ipa dnszone-find |
+                    grep "Zone\ name:" |
+                    awk '{print $3}')
+    for dns_zone in ${dns_zones[@]}; do
+        if [[ "$dns_zone" == *"in-addr.arpa"* ]]; then
+            ip_quad_3=$(echo $clientip | cut -d . -f 3)
+            ip_quad_4=$(echo $clientip | cut -d . -f 4)
+            reverse_record="${ip_quad_4}.${ip_quad_3}"
+            if [ "$(ipa dnsrecord-find $dns_zone | grep $reverse_record)" ]; then
+                ipa dnsrecord-del \
+                    --del-all \
+                    $dns_zone \
+                    $reverse_record >> /dev/null 2>&1
+            fi
+        fi
+        if [[ "$dns_zone" == *"${cluster}"* ]]; then
+          if [[ "$(ipa dnsrecord-find $dns_zone | grep "${clientname}")" ]]; then
+            ipa host-del "${clientname}.${cluster}.${domain}" \
+                --updatedns \
+                --continue \
+                >> /dev/null 2>&1
+          fi
+        fi
+        if [[ "$(ipa dnsrecord-find ${dns_zone} | grep $clientip)" ]]; then
+            record_host=$(ipa dnsrecord-find ${dns_zone} ${clientip} |
+                                         grep "Record\ name:" |
+                                         awk '{print $3}')
+            record_cluster=${dns_zone::-1}
+            ipa host-del "${record_host}.${record_cluster}" \
+                --updatedns \
+                --continue \
+                >> /dev/null 2>&1
+        fi
+    done
+    echo "OK"
+    cluster_hostgroup >> /dev/null 2>&1
+    add_node >> /dev/null 2>&1
+
+}
+
+add_node() {
+
+  ipa host-add ${fqdn} --ip-address=${clientip}
+  ipa host-mod ${fqdn} --password="${onetimepass}"
+  ipa hostgroup-add-member ${cluster_domain} --hosts=${fqdn}
+  ipa hostgroup-add-member usernodes --hosts=${fqdn}
+
+}
+
+if [[ -z $clientname || -z $clientip || -z $onetimepass ]];
+then
+
+  echo "One or more parameters not provided"
+  echo "Usage: $0 <client name> <client ip> <cluster (optional)> <one time password>"
+
+else
+
+  kinit -kt $keytab $keyuser
+  check_cluster
+
+fi

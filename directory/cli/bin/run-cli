@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+# Need to toggle option as `venv/bin/activate` relies on undefined variables.
+set +u
+source venv/bin/activate
+set -u
+
+src/directory "$@"

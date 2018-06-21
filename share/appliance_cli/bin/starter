@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Use separate script to actually run CLI so can run multiple commands using
+# sudo.
+sudo -E "$SCRIPT_DIR/run-cli" "$@"
