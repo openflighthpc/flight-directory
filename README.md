@@ -47,6 +47,18 @@ mkdir /opt/directory/etc
 echo "IPAPASSWORD=MyIPApassHere" > /opt/directory/etc/config
 ```
 
+- Add IPA server address to configuration (replace `infra01.testnet.alces.network` with the IPA server FQDN)
+
+```
+echo 'cw_ACCESS_fqdn=infra01.testnet.alces.network' > /opt/directory/etc/access.rc
+```
+
+- Create output directory for export
+
+```
+mkdir -p /var/www/html/secure
+```
+
 - Create a user for managing IPA
 
 ```

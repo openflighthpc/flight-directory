@@ -8,7 +8,7 @@ from appliance_cli.utils import struct
 
 def create_config_dict(appliance_type):
     appliance_dir = join('/opt/', appliance_type)
-    clusterware_root = '/opt/clusterware'
+    userware_root = '/opt/directory'
     support_user = 'alces'
 
     return {
@@ -18,8 +18,8 @@ def create_config_dict(appliance_type):
 
         'SANDBOX_HISTORY': join(appliance_dir, 'history'),
 
-        'CLUSTERWARE_ROOT': clusterware_root,
-        'CLUSTERWARE_ACCESS_CONFIG': join(clusterware_root, 'etc/access.rc'),
+        'CLUSTERWARE_ROOT': userware_root,
+        'CLUSTERWARE_ACCESS_CONFIG': join(userware_root, 'etc/access.rc'),
 
         'SUPPORT_USER': support_user,
         'SUPPORT_USER_AUTHORIZED_KEYS': join(
