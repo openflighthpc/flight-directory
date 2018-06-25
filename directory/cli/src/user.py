@@ -134,6 +134,7 @@ def _user_options(require_names=True):
         '--last': {'help': 'Last name', 'required': require_names},
         '--shell': {'help': 'Login shell'},
         '--email': {'help': 'Email address'},
+        '--uid': {'help': 'User ID Number'},
         '--gidnumber': {'help': 'Group ID Number'},
         '--key': {'help': 'SSH public key'},
     }
@@ -168,10 +169,24 @@ def _modify_options():
 
 
 def _transform_create_options(argument, options):
+    _validate_create_uid(options['uid'])
     return OptionTransformer(argument, options).\
         rename_and_invert_flag_option('no_password', 'random').\
         rename_option('key', 'sshpubkey').\
         options
+
+
+def _validate_create_uid(uid):
+    try:
+        user_find_args = ['--uid={}'.format(uid)]
+        matching_user_uid = ipa_utils.ipa_find('user-find', user_find_args)
+    except IpaRunError:
+        # If no user with UID exists capture the runtime error
+        # and use empty array
+        matching_user_uid = []
+    if matching_user_uid:
+        error = "User with uid '" + uid + "' already exists"
+        raise click.ClickException(error)
 
 
 def _transform_modify_options(argument, options):
