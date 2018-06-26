@@ -34,6 +34,7 @@ USER_SHOW_FIELD_CONFIGS.update([
     ('SSH public key', field_with_same_name),
 ])
 
+USER_BLACKLIST = ['admin', 'alces-cluster']
 
 def add_commands(directory):
 
@@ -47,12 +48,15 @@ def add_commands(directory):
             ipa_find_command='user-find',
             field_configs=USER_LIST_FIELD_CONFIGS,
             sort_key='UID',
-            generate_additional_data=_additional_data_for_list
+            generate_additional_data=_additional_data_for_list,
+            blacklist_key='User login',
+            blacklist_val_array=USER_BLACKLIST
         )
 
     @user.command(help='Show detailed information on a user')
     @click.argument('login')
     def show(login):
+        _validate_blacklist_users(login)
         user_find_args = ['--login={}'.format(login)]
         try:
             list_command.do(
@@ -169,6 +173,7 @@ def _modify_options():
 
 
 def _transform_create_options(argument, options):
+    _validate_blacklist_users(argument)
     _validate_create_uid(options['uid'])
     return OptionTransformer(argument, options).\
         rename_and_invert_flag_option('no_password', 'random').\
@@ -186,6 +191,12 @@ def _validate_create_uid(uid):
         matching_user_uid = []
     if matching_user_uid:
         error = "User with uid '" + uid + "' already exists"
+        raise click.ClickException(error)
+
+
+def _validate_blacklist_users(argument, options={}):
+    if argument in USER_BLACKLIST:
+        error = "The user " + argument + " is a restricted user"
         raise click.ClickException(error)
 
 
