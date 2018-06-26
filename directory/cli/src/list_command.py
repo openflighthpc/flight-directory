@@ -64,11 +64,18 @@ def do(
         sort_key=None,
         generate_additional_data=lambda: {},
         display=table_displayer,
+        blacklist_key=None,
+        blacklist_val_array=[]
 ):
     if not all([ipa_find_command, field_configs]):
         raise TypeError
 
     item_dicts = ipa_utils.ipa_find(ipa_find_command, ipa_find_args)
+
+    # Remove blacklisted items
+    if blacklist_key:
+        item_dicts = [item_dict for item_dict in item_dicts if item_dict[blacklist_key][0] not in blacklist_val_array]
+        
     if sort_key:
         item_dicts.sort(key=itemgetter(sort_key))
 
