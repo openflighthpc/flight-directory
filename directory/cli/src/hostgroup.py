@@ -10,7 +10,6 @@ from exceptions import IpaRunError
 HOSTGROUP_LIST_FIELD_CONFIGS = OrderedDict([
 	('Host group name', field_with_same_name),
 	('Description', field_with_same_name),
-	('HGID', field_with_same_name),
 ])
 
 HOSTGROUP_SHOW_FIELD_CONFIGS = HOSTGROUP_LIST_FIELD_CONFIGS.copy()
@@ -22,7 +21,7 @@ HOSTGROUP_OPTIONS = {
 	'--desc':{'help': 'Host group description'}
 }
 # TODO enter blacklist hostgroups
-HOSTGROUP_BLACKLIST = []
+HOSTGROUP_BLACKLIST = ['adminnode', 'ipaservers']
 
 def add_commands(directory):
 
@@ -36,8 +35,8 @@ def add_commands(directory):
 			ipa_find_command='hostgroup-find',
 			field_configs=HOSTGROUP_LIST_FIELD_CONFIGS,
 			# TODO sort out the sort of the list results &
-			#sort_key='HGID',
-			#blacklist_key='Host group name',
+			sort_key='Host group name',
+			blacklist_key='Host group name',
 			blacklist_val_array=HOSTGROUP_BLACKLIST,
 		)
 	

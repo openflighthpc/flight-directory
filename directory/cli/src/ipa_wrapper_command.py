@@ -16,6 +16,9 @@ def create(
         transform_options_callback=lambda argument, options: options,
         handle_result_callback=lambda argument, options, result: None,
 ):
+    
+    print("at the start of the call options are:\n " + str(options) + "\n") 
+
     if not all([ipa_command, argument_name]):
         raise TypeError
 
@@ -25,6 +28,8 @@ def create(
         for option_name, option_config in options.items()
     ]
     params = [argument] + options
+   
+    print("before the create_ipa_wrapper  call eptions are:\n " + str(options) + "\n") 
 
     ipa_wrapper = _create_ipa_wrapper(
         ipa_command,
@@ -32,7 +37,7 @@ def create(
         transform_options_callback=transform_options_callback,
         handle_result_callback=handle_result_callback
     )
-
+	
     return click.Command(
         command_name,
         callback=ipa_wrapper,
@@ -48,8 +53,21 @@ def _create_ipa_wrapper(
         handle_result_callback=None,
 ):
     def ipa_wrapper(**validated_params):
+	
+        print(" in the create_ipa_wrapper  call the validated params are:\n " + str(validated_params)  + "\n") 
+	
+
         # Get argument if present; the other params are options.
         argument = validated_params.pop(argument_name)
+
+        #At somepoint during processing of the options, seemingly in click.Option, the '-' in ip-address
+	#	is being replaced with an underscore
+	#I couldn't work out why so this is a messy fix for the time being
+        if 'ip_address' in validated_params:
+            swpValue = validated_params['ip_address']
+            validated_params['ip-address'] = swpValue
+            del validated_params['ip_address']
+
         options = validated_params
 
         args = _build_ipa_args(

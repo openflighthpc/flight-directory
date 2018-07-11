@@ -17,8 +17,8 @@ from option_transformer import OptionTransformer
 HOST_LIST_FIELD_CONFIGS = OrderedDict([
 	('Host name', field_with_same_name),
 	('Password', field_with_same_name),
-	('HID', field_with_same_name),
 	('Host IP', field_with_same_name),
+	('Host group', field_with_same_name),
 ])
 
 HOST_SHOW_FIELD_CONFIGS = HOST_LIST_FIELD_CONFIGS.copy()
@@ -26,7 +26,7 @@ HOST_SHOW_FIELD_CONFIGS.update([
 ])
 
 # TODO add host blacklist
-HOST_BLACKLIST = []
+HOST_BLACKLIST = ['controller', 'infra01', 'infra02', 'infra03']
 
 
 def add_commands(directory):
@@ -40,9 +40,8 @@ def add_commands(directory):
 		list_command.do(
 			ipa_find_command='host-find',
 			field_configs=HOST_LIST_FIELD_CONFIGS,
-			#TODO sort the sorting of the list results
-			#sort_key='HID',
-			generate_additional_data=_additional_data_for_list,
+			sort_key='Host name',
+			#generate_additional_data=_additional_data_for_list,
 			blacklist_key='Host name',
 			blacklist_val_array=HOST_BLACKLIST,
 		)
@@ -89,7 +88,7 @@ def add_commands(directory):
 		),
 		ipa_wrapper_command.create(
 			'delete',
-			ipa_command='host-disable',
+			ipa_command='host-del',
 			argument_name='hostname',
 			handle_result_callback=_handle_delete_result,
 			help='Delete existing host'
@@ -102,7 +101,7 @@ def _additional_data_for_list():
 	return{
 		'hostgroups': _hostgroups_by_hgid()
 	}
-
+#TODO change this to work with host group names rather than HGID's
 def _hostgroups_by_hgid():
 	hostgroups_by_hgid = {}
 	for hostgroup_data in _all_hostgroups():
@@ -123,25 +122,12 @@ def _host_options():
 	return {
 		'--password': {'help': 'Host password'},
 		'--ip-address': {'help': 'IP address of host'},
-		'--hid':{'help': 'The ID of the host'}
 	}
 
 def _transform_create_options(argument, options):
 	_validate_blacklist_hosts(argument)
-	_validate_create_hid(options['hid'])
 	return OptionTransformer(argument, options).\
 		options
-
-def _validate_create_hid(hid):
-	try:
-		host_find_args = ['--hid={}'.format(hid)]
-		matching_host_hid = ipa_utils.ipa_find('host-find', host_find_args)
-	except IpaRunError:
-		#if no user with the hid exists capture the runtime error
-		matching_host_hid = []
-	if matching_host_hid: 
-		error = "Host with hid " + hid + " already exists"
-		raise click.ClickException(error)
 
 def _validate_blacklist_hosts(argument, options={}):
 	if argument in HOST_BLACKLIST:
@@ -160,11 +146,4 @@ def _handle_modify_result(hostname, options, result):
 
 def _handle_delete_result(hostname, options, result):
 	pass
-
-def _handle_new_temporary_password():
-	pass
-
-def _handle_removed_password():
-	pass
-
 

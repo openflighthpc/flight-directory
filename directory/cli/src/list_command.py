@@ -135,6 +135,7 @@ def group_with_users_gid(field_name, item_dict, additional_data):
         pass
     return group_name
 
+#TODO change this to work with host group names instead of ID's
 def hostgroup_with_host_hgid(field_name, item_dict, additional_data):
     hostgroup_name = ""
     host_hgid = item_dict['HGID'][0]
