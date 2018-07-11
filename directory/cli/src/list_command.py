@@ -122,8 +122,27 @@ def field_with_name(name):
 
 
 def group_with_users_gid(field_name, item_dict, additional_data):
+    group_name = ""
+    #the user's primary group's gid is set by looking at the dict for that user
     user_gid = item_dict['GID'][0]
     groups_by_gid = additional_data['groups']
-    user_group = groups_by_gid[user_gid]
-    group_name = user_group['Group name']
+    try:
+        #sets 'user_group' to their primary group
+        user_group = groups_by_gid[user_gid]
+        #sets group name to their group's name
+        group_name = user_group['Group name']
+    except:
+        pass
     return group_name
+
+def hostgroup_with_host_hgid(field_name, item_dict, additional_data):
+    hostgroup_name = ""
+    host_hgid = item_dict['HGID'][0]
+    hostgroups_by_hgid = additional_data['hostgroups']
+    try:
+        host_hostgroup = hostgroups_by_hgid[host_hgid]
+        hostgroup_name = host_hostgroup['Host group name']
+    except:
+        pass
+    return hostgroup_name
+	
