@@ -6,9 +6,10 @@ from list_command import field_with_same_name
 import ipa_wrapper_command
 import ipa_utils
 from exceptions import IpaRunError
+from option_transformer import OptionTransformer
 
 HOSTGROUP_LIST_FIELD_CONFIGS = OrderedDict([
-	('Host group name', field_with_same_name),
+	('Host-group', field_with_same_name),
 	('Description', field_with_same_name),
 ])
 
@@ -35,8 +36,8 @@ def add_commands(directory):
 			ipa_find_command='hostgroup-find',
 			field_configs=HOSTGROUP_LIST_FIELD_CONFIGS,
 			# TODO sort out the sort of the list results &
-			sort_key='Host group name',
-			blacklist_key='Host group name',
+			#sort_key='Host group name',
+			#blacklist_key='Host group name',
 			blacklist_val_array=HOSTGROUP_BLACKLIST,
 		)
 	
@@ -87,7 +88,7 @@ def add_commands(directory):
 			ipa_command='hostgroup-add',
 			argument_name='name',
 			options=HOSTGROUP_OPTIONS,
-			transform_options_callback=_validate_blacklist_hostgroups,
+			transform_options_callback=_transform_options,
 			handle_result_callback=_handle_create_result,
 			help='Create a new host group',
 		),
@@ -96,7 +97,7 @@ def add_commands(directory):
 			ipa_command='hostgroup-mod',
 			argument_name='name',
 			options=HOSTGROUP_OPTIONS,
-			transform_options_callback=_validate_blacklist_hostgroups,
+			transform_options_callback=_transform_options,
 			handle_result_callback=_handle_modify_result,
 			help='Modify an existing host group',
 		),
@@ -105,7 +106,7 @@ def add_commands(directory):
 			ipa_command='hostgroup-del',
 			argument_name='name',
 			options=HOSTGROUP_OPTIONS,
-			transform_options_callback=_validate_blacklist_hostgroups,
+			transform_options_callback=_transform_options,
 			handle_result_callback=_handle_delete_result,
 			help='Delete a host group',
 		)
@@ -113,6 +114,11 @@ def add_commands(directory):
 
 	for command in wrapper_commands:
 		hostgroup.add_command(command)
+
+def _transform_options(argument, options):
+	_validate_blacklist_hostgroups(argument)
+	return OptionTransformer(argument, options).\
+		options
 
 def _validate_blacklist_hostgroups(argument, options={}):
 	if argument in HOSTGROUP_BLACKLIST:

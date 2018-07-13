@@ -1,24 +1,27 @@
 import click
 from collections import OrderedDict
 
+from config import CONFIG
 import list_command
 from list_command import \
 	field_with_same_name, \
 	field_with_name, \
-	hostgroup_with_host_hgid
+	hostgroup_with_host_group_name, \
+	host_with_ip
 import ipa_wrapper_command
 import ipa_utils
 import appliance_cli.text as text
 import appliance_cli.utils
 import utils
+import re
 from exceptions import IpaRunError
 from option_transformer import OptionTransformer
 
 HOST_LIST_FIELD_CONFIGS = OrderedDict([
 	('Host name', field_with_same_name),
-	('Password', field_with_same_name),
-	('Host IP', field_with_same_name),
-	('Host group', field_with_same_name),
+	('ip-address', host_with_ip),
+	('Member of host-groups', field_with_same_name),
+	#('Member of host-groups', hostgroup_with_host_group_name),
 ])
 
 HOST_SHOW_FIELD_CONFIGS = HOST_LIST_FIELD_CONFIGS.copy()
@@ -41,7 +44,7 @@ def add_commands(directory):
 			ipa_find_command='host-find',
 			field_configs=HOST_LIST_FIELD_CONFIGS,
 			sort_key='Host name',
-			#generate_additional_data=_additional_data_for_list,
+			generate_additional_data=_additional_data_for_list(),
 			blacklist_key='Host name',
 			blacklist_val_array=HOST_BLACKLIST,
 		)
@@ -58,13 +61,13 @@ def add_commands(directory):
 				ipa_find_command='host-find',
 				ipa_find_args=host_find_args,
 				field_configs=HOST_SHOW_FIELD_CONFIGS,
-				generate_additional_data=_additional_data_for_list,
+				generate_additional_data=_additional_data_for_list(),
 				display=list_command.list_displayer
 			)
 		except IpaRunError:
 			# No matching host found; for consistency raise error with similar
 			# format to IPA errors.
-			error = '{}: host not found'.format(identifier)
+			error = '{}: host not found'.format(hostname)
 			raise click.ClickException(error)
 	
 	wrapper_commands = [
@@ -99,24 +102,54 @@ def add_commands(directory):
 
 def _additional_data_for_list():
 	return{
-		'hostgroups': _hostgroups_by_hgid()
+		'ip-address': _get_ip(),
+		'hostgroups': _hostgroups_by_name()
 	}
-#TODO change this to work with host group names rather than HGID's
-def _hostgroups_by_hgid():
-	hostgroups_by_hgid = {}
+
+def _get_ip():
+	host_ips_by_name = {}
+	for host_data in _all_hosts():
+		try:	
+			command = 'dnsrecord-find'
+			host_name = host_data['Host name'][0]
+			host_name_text = re.sub(r'\..*$',"",host_name)
+			#print("*********HOSTNAME IS EQUAL TO:" + host_name_text + "*************")
+			domain_name= re.sub(r'^.*?\.',"",host_name)
+			#print("*********PRIMARY DOMAIN IS EQUAL TO:"+ domain_name  + "**************\n")
+			host_name_instruct = '--name='+host_name_text
+			args = [domain_name, host_name_instruct]
+
+			ip_result = ipa_utils.ipa_run(command, args, record=False)
+			ip_result_parsed = ipa_utils.parse_find_output(ip_result)
+			
+			ip_address_dict = ip_result_parsed[0]
+			ip_address_list = ip_address_dict["A record"]
+			#print( ip_address_list)
+			host_ips_by_name[host_name] = ip_address_list
+		except KeyError:
+			continue	
+	return host_ips_by_name
+	
+def _hostgroups_by_name():
+	hostgroups_by_name = {}
 	for hostgroup_data in _all_hostgroups():
 		try:
-			hgid = hostgroup_data['HGID'][0]
-			hostgroups_by_hgid[hgid] = hostgroup_data
+			host_group_name = hostgroup_data['Host-group'][0]
+			hostgroups_by_name[host_group_name] = hostgroup_data
 		except KeyError:
-			#some hostgroups don't have ID's, they can skipped over
 			continue
-		return hostgroups_by_hgid	
+	return hostgroups_by_name	
+
+def _all_hosts():
+	public_hosts = ipa_utils.ipa_find('host-find')
+	#private_hosts = ipa_utils.ipa_find('host-find', ['--private'])
+	#print("finished all_hosts\n")
+	return public_hosts# + private_hosts
+	
 
 def _all_hostgroups():
 	public_hostgroups = ipa_utils.ipa_find('hostgroup-find')
-	#private_hostgroups = ipa_utils.ipa_find('hostgroup-find', ['--private'])
-	return public_hostgroups# + private_hostgroups
+	return public_hostgroups
 
 def _host_options():
 	return {
@@ -146,4 +179,3 @@ def _handle_modify_result(hostname, options, result):
 
 def _handle_delete_result(hostname, options, result):
 	pass
-

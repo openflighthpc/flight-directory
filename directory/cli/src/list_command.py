@@ -83,7 +83,7 @@ def do(
     results_data = _create_data(
         item_dicts,
         field_configs,
-        generate_additional_data()
+        generate_additional_data
     )
 
     display(headers, results_data)
@@ -135,15 +135,24 @@ def group_with_users_gid(field_name, item_dict, additional_data):
         pass
     return group_name
 
-#TODO change this to work with host group names instead of ID's
-def hostgroup_with_host_hgid(field_name, item_dict, additional_data):
+def hostgroup_with_host_group_name(field_name, item_dict, additional_data):
     hostgroup_name = ""
-    host_hgid = item_dict['HGID'][0]
-    hostgroups_by_hgid = additional_data['hostgroups']
+    host_group_name = item_dict['Host-group'][0]
+    hostgroups_by_group_name = additional_data['hostgroups']
     try:
-        host_hostgroup = hostgroups_by_hgid[host_hgid]
-        hostgroup_name = host_hostgroup['Host group name']
+        host_hostgroup = hostgroups_by_group_name[host_group_name]
+        hostgroup_name = host_hostgroup['Host-group']
     except:
         pass
-    return hostgroup_name
-	
+    return host_group_name
+
+def host_with_ip(field_name, item_dict, additional_data):
+    host_ips_str = ""
+    host_name = item_dict['Host name'][0]
+    ip_addresses = additional_data['ip-address']
+    try:
+        host_ips = ip_addresses[host_name]
+        host_ips_str = ", ".join(host_ips)
+    except:
+        pass
+    return host_ips_str
