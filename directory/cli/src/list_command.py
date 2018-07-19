@@ -85,8 +85,6 @@ def do(
         field_configs,
         generate_additional_data()
     )
-    print(generate_additional_data())
-    print(results_data)
     display(headers, results_data)
 
 

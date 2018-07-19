@@ -21,7 +21,6 @@ HOST_LIST_FIELD_CONFIGS = OrderedDict([
 	('Host name', field_with_same_name),
 	('ip-address', host_with_ip),
 	('Member of host-groups', field_with_same_name),
-	#('Member of host-groups', hostgroup_with_host_group_name),
 ])
 
 HOST_SHOW_FIELD_CONFIGS = HOST_LIST_FIELD_CONFIGS.copy()
@@ -50,14 +49,12 @@ def add_commands(directory):
 		)
 
 	@host.command(help='Show detailed information on a host')		
-	#need to decide on identifier
 	@click.argument('hostname')
 	def show(hostname):
 		_validate_blacklist_hosts(hostname)
 		host_find_args = ['--hostname={}'.format(hostname)]
 		try:
 			list_command.do(
-				#or should this be 'host-show'(though it isn't in stu's code)?
 				ipa_find_command='host-find',
 				ipa_find_args=host_find_args,
 				field_configs=HOST_SHOW_FIELD_CONFIGS,
@@ -77,7 +74,6 @@ def add_commands(directory):
 			argument_name='hostname',
 			options=_host_options(),
 			transform_options_callback=_transform_create_options,
-			handle_result_callback=_handle_create_result,
 			help='Create new host'
 		),
 		ipa_wrapper_command.create(
@@ -85,15 +81,12 @@ def add_commands(directory):
 			ipa_command='host-mod',
 			argument_name='hostname',
 			options=_host_options(),
-			transform_options_callback=_transform_modify_options,
-			handle_result_callback=_handle_modify_result,
 			help='Modify existing host'
 		),
 		ipa_wrapper_command.create(
 			'delete',
 			ipa_command='host-del',
 			argument_name='hostname',
-			handle_result_callback=_handle_delete_result,
 			help='Delete existing host'
         )]
 	
@@ -122,7 +115,6 @@ def _get_ip():
 			ip_address_dict = ip_result_parsed[0]
 			ip_address_list = ip_address_dict["A record"]
 			host_ips_by_name[host_name] = ip_address_list
-			#print(host_ips_by_name[host_name])
 		except KeyError:
 			continue	
 	return host_ips_by_name
@@ -154,23 +146,10 @@ def _host_options():
 
 def _transform_create_options(argument, options):
 	_validate_blacklist_hosts(argument)
-	return OptionTransformer(argument, options).\
-		options
+	return options
 
 def _validate_blacklist_hosts(argument, options={}):
 	if argument in HOST_BLACKLIST:
 		error = "The host " + argument + " is a restricted host"
 		raise click.ClickException(error)
 
-def _transform_modify_options(argument, options):
-	return OptionTransformer(argument, options).\
-		options
-
-def _handle_create_result(hostname, options, result):
-	pass	
-
-def _handle_modify_result(hostname, options, result):
-	pass
-
-def _handle_delete_result(hostname, options, result):
-	pass

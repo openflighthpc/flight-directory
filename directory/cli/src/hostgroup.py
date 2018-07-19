@@ -21,7 +21,7 @@ HOSTGROUP_SHOW_FIELD_CONFIGS.update([
 HOSTGROUP_OPTIONS = {
 	'--desc':{'help': 'Host group description'}
 }
-# TODO enter blacklist hostgroups
+
 HOSTGROUP_BLACKLIST = ['adminnode', 'ipaservers']
 
 def add_commands(directory):
@@ -35,22 +35,18 @@ def add_commands(directory):
 		list_command.do(
 			ipa_find_command='hostgroup-find',
 			field_configs=HOSTGROUP_LIST_FIELD_CONFIGS,
-			# TODO sort out the sort of the list results &
-			#sort_key='Host group name',
-			#blacklist_key='Host group name',
+			sort_key='Host-group',
+			blacklist_key='Host-group',
 			blacklist_val_array=HOSTGROUP_BLACKLIST,
 		)
 	
 	@hostgroup.command(help='Show detailed information on one host group')
-	#this line gives the host group's name as an argument to the command call above
 	@click.argument('hostgroup_name')
 	def show(hostgroup_name):
 		_validate_blacklist_hostgroups(hostgroup_name)
-		## i don't understand this line
 		hostgroup_find_args = ['--hostgroup-name={}'.format(hostgroup_name)]
 		try:
 			list_command.do(
-				#should this be -show?
 				ipa_find_command='hostgroup-find',
 				ipa_find_args=hostgroup_find_args,
 				field_configs=HOSTGROUP_SHOW_FIELD_CONFIGS,
@@ -76,7 +72,7 @@ def add_commands(directory):
 	@click.argument('hosts', nargs=-1)
 	def remove_member(hostgroup_name, hosts):
 		_validate_blacklist_hostgroups(hostgroup_name, hosts)
-		host_options = ['--hosts={}'.format(host) for host in host]
+		host_options = ['--hosts={}'.format(host) for host in hosts]
 		ipa_command = 'hostgroup-remove-member'
 		args = [hostgroup_name] + host_options
 		ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
@@ -89,7 +85,6 @@ def add_commands(directory):
 			argument_name='name',
 			options=HOSTGROUP_OPTIONS,
 			transform_options_callback=_transform_options,
-			handle_result_callback=_handle_create_result,
 			help='Create a new host group',
 		),
 		ipa_wrapper_command.create(
@@ -98,7 +93,6 @@ def add_commands(directory):
 			argument_name='name',
 			options=HOSTGROUP_OPTIONS,
 			transform_options_callback=_transform_options,
-			handle_result_callback=_handle_modify_result,
 			help='Modify an existing host group',
 		),
 		ipa_wrapper_command.create(
@@ -107,7 +101,6 @@ def add_commands(directory):
 			argument_name='name',
 			options=HOSTGROUP_OPTIONS,
 			transform_options_callback=_transform_options,
-			handle_result_callback=_handle_delete_result,
 			help='Delete a host group',
 		)
 	]
@@ -117,20 +110,9 @@ def add_commands(directory):
 
 def _transform_options(argument, options):
 	_validate_blacklist_hostgroups(argument)
-	return OptionTransformer(argument, options).\
-		options
+	return options
 
 def _validate_blacklist_hostgroups(argument, options={}):
 	if argument in HOSTGROUP_BLACKLIST:
 		error = "The host group " + argument + " is a resricted hostgroup"
 		raise click.ClickException(error)
-
-def _handle_create_result(hostname, options, result):
-	pass	
-
-def _handle_modify_result(hostname, options, result):
-	pass
-
-def _handle_delete_result(hostname, options, result):
-	pass
-
