@@ -57,8 +57,7 @@ def _create_ipa_wrapper(
 	#	is being replaced with an underscore
 	#I couldn't work out why so this is a messy fix for the time being
         if 'ip_address' in validated_params:
-            swpValue = validated_params['ip_address']
-            validated_params['ip-address'] = swpValue
+            validated_params['ip-address'] = validated_params['ip_address'] 
             del validated_params['ip_address']
 
         options = validated_params

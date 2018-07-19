@@ -52,7 +52,7 @@ def add_commands(directory):
 			list_command.do(
 				#should this be -show?
 				ipa_find_command='hostgroup-find',
-				ip_find_args=hostgroup_find_args,
+				ipa_find_args=hostgroup_find_args,
 				field_configs=HOSTGROUP_SHOW_FIELD_CONFIGS,
 				display=list_command.list_displayer
 			)

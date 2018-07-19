@@ -83,7 +83,7 @@ def do(
     results_data = _create_data(
         item_dicts,
         field_configs,
-        generate_additional_data
+        generate_additional_data()
     )
 
     display(headers, results_data)
@@ -131,7 +131,8 @@ def group_with_users_gid(field_name, item_dict, additional_data):
         user_group = groups_by_gid[user_gid]
         #sets group name to their group's name
         group_name = user_group['Group name']
-    except:
+    #If the key doesn't exist we want to skip it & return the empty string
+    except KeyError:
         pass
     return group_name
 
@@ -142,7 +143,8 @@ def hostgroup_with_host_group_name(field_name, item_dict, additional_data):
     try:
         host_hostgroup = hostgroups_by_group_name[host_group_name]
         hostgroup_name = host_hostgroup['Host-group']
-    except:
+    #If the key doesn't exist we want to skip it & return the empty string
+    except KeyError:
         pass
     return host_group_name
 
@@ -153,6 +155,7 @@ def host_with_ip(field_name, item_dict, additional_data):
     try:
         host_ips = ip_addresses[host_name]
         host_ips_str = ", ".join(host_ips)
-    except:
+    #If the key doesn't exist we want to skip it & return the empty string
+    except KeyError:
         pass
     return host_ips_str

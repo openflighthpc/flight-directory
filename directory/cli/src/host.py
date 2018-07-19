@@ -44,7 +44,7 @@ def add_commands(directory):
 			ipa_find_command='host-find',
 			field_configs=HOST_LIST_FIELD_CONFIGS,
 			sort_key='Host name',
-			generate_additional_data=_additional_data_for_list(),
+			generate_additional_data=_additional_data_for_list,
 			blacklist_key='Host name',
 			blacklist_val_array=HOST_BLACKLIST,
 		)
@@ -61,7 +61,7 @@ def add_commands(directory):
 				ipa_find_command='host-find',
 				ipa_find_args=host_find_args,
 				field_configs=HOST_SHOW_FIELD_CONFIGS,
-				generate_additional_data=_additional_data_for_list(),
+				generate_additional_data=_additional_data_for_list,
 				display=list_command.list_displayer
 			)
 		except IpaRunError:
