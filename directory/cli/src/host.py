@@ -113,19 +113,16 @@ def _get_ip():
 			command = 'dnsrecord-find'
 			host_name = host_data['Host name'][0]
 			host_name_text = re.sub(r'\..*$',"",host_name)
-			#print("*********HOSTNAME IS EQUAL TO:" + host_name_text + "*************")
-			domain_name= re.sub(r'^.*?\.',"",host_name)
-			#print("*********PRIMARY DOMAIN IS EQUAL TO:"+ domain_name  + "**************\n")
+			domain_name = re.sub(r'^.*?\.',"",host_name)
 			host_name_instruct = '--name='+host_name_text
 			args = [domain_name, host_name_instruct]
 
 			ip_result = ipa_utils.ipa_run(command, args, record=False)
 			ip_result_parsed = ipa_utils.parse_find_output(ip_result)
-			
 			ip_address_dict = ip_result_parsed[0]
 			ip_address_list = ip_address_dict["A record"]
-			#print( ip_address_list)
 			host_ips_by_name[host_name] = ip_address_list
+			#print(host_ips_by_name[host_name])
 		except KeyError:
 			continue	
 	return host_ips_by_name
@@ -142,9 +139,7 @@ def _hostgroups_by_name():
 
 def _all_hosts():
 	public_hosts = ipa_utils.ipa_find('host-find')
-	#private_hosts = ipa_utils.ipa_find('host-find', ['--private'])
-	#print("finished all_hosts\n")
-	return public_hosts# + private_hosts
+	return public_hosts
 	
 
 def _all_hostgroups():

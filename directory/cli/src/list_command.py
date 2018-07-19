@@ -1,10 +1,10 @@
 
 import click
 from operator import itemgetter
+import re
 
 import ipa_utils
 import appliance_cli.text as text
-
 
 # Data displayers - take some headers and some data (`ipa_find` output) and
 # display in some way.
@@ -85,7 +85,8 @@ def do(
         field_configs,
         generate_additional_data()
     )
-
+    print(generate_additional_data())
+    print(results_data)
     display(headers, results_data)
 
 
@@ -106,7 +107,11 @@ def _create_row(item_dict, field_configs, additional_data):
 def _display_value_for(item_dict, field_config, additional_data):
     name, generator = field_config
     value = generator(name, item_dict, additional_data)
-    return '\n'.join(value)
+    if name == 'ip-address':
+        value_concat = ''.join(value)
+        return re.sub(r', ',',\\n',value_concat)
+    else:
+        return '\n'.join(value)
 
 
 # Field generators.
