@@ -19,7 +19,7 @@ development-setup: setup
 	bin/development-setup
 
 rsync:
-	rsync -r --copy-links --perms . dev@${IP}:${REMOTE_DIR}
+	rsync -r --copy-links --perms . root@${IP}:${REMOTE_DIR}
 
 watch-rsync:
 	rerun \

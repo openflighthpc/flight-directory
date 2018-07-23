@@ -7,6 +7,8 @@ from config import CONFIG
 import utils
 import user
 import group
+import host
+import hostgroup
 import import_export
 from appliance_cli.commands import command_modules as standard_command_modules
 from exceptions import IpaRunError
@@ -43,7 +45,7 @@ def directory():
     utils.obtain_kerberos_ticket()
 
 
-command_modules = standard_command_modules + [user, group, import_export]
+command_modules = standard_command_modules + [user, group, import_export, host, hostgroup]
 
 for module in command_modules:
     module.add_commands(directory)

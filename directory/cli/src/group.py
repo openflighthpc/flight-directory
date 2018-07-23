@@ -114,3 +114,4 @@ def _validate_blacklist_groups(argument, options={}):
     if argument in GROUP_BLACKLIST:
         error = "The group " + argument + " is a restricted group"
         raise click.ClickException(error)
+    return options

@@ -1,10 +1,10 @@
 
 import click
 from operator import itemgetter
+import re
 
 import ipa_utils
 import appliance_cli.text as text
-
 
 # Data displayers - take some headers and some data (`ipa_find` output) and
 # display in some way.
@@ -85,7 +85,6 @@ def do(
         field_configs,
         generate_additional_data()
     )
-
     display(headers, results_data)
 
 
@@ -106,7 +105,11 @@ def _create_row(item_dict, field_configs, additional_data):
 def _display_value_for(item_dict, field_config, additional_data):
     name, generator = field_config
     value = generator(name, item_dict, additional_data)
-    return '\n'.join(value)
+    if name == 'ip-address':
+        value_concat = ''.join(value)
+        return re.sub(r', ',',\\n',value_concat)
+    else:
+        return '\n'.join(value)
 
 
 # Field generators.
@@ -122,8 +125,40 @@ def field_with_name(name):
 
 
 def group_with_users_gid(field_name, item_dict, additional_data):
+    group_name = ""
+    #the user's primary group's gid is set by looking at the dict for that user
     user_gid = item_dict['GID'][0]
     groups_by_gid = additional_data['groups']
-    user_group = groups_by_gid[user_gid]
-    group_name = user_group['Group name']
+    try:
+        #sets 'user_group' to their primary group
+        user_group = groups_by_gid[user_gid]
+        #sets group name to their group's name
+        group_name = user_group['Group name']
+    #If the key doesn't exist we want to skip it & return the empty string
+    except KeyError:
+        pass
     return group_name
+
+def hostgroup_with_host_group_name(field_name, item_dict, additional_data):
+    hostgroup_name = ""
+    host_group_name = item_dict['Host-group'][0]
+    hostgroups_by_group_name = additional_data['hostgroups']
+    try:
+        host_hostgroup = hostgroups_by_group_name[host_group_name]
+        hostgroup_name = host_hostgroup['Host-group']
+    #If the key doesn't exist we want to skip it & return the empty string
+    except KeyError:
+        pass
+    return host_group_name
+
+def host_with_ip(field_name, item_dict, additional_data):
+    host_ips_str = ""
+    host_name = item_dict['Host name'][0]
+    ip_addresses = additional_data['ip-address']
+    try:
+        host_ips = ip_addresses[host_name]
+        host_ips_str = ", ".join(host_ips)
+    #If the key doesn't exist we want to skip it & return the empty string
+    except KeyError:
+        pass
+    return host_ips_str

@@ -16,6 +16,7 @@ def create(
         transform_options_callback=lambda argument, options: options,
         handle_result_callback=lambda argument, options, result: None,
 ):
+    
     if not all([ipa_command, argument_name]):
         raise TypeError
 
@@ -32,7 +33,7 @@ def create(
         transform_options_callback=transform_options_callback,
         handle_result_callback=handle_result_callback
     )
-
+	
     return click.Command(
         command_name,
         callback=ipa_wrapper,
@@ -48,8 +49,17 @@ def _create_ipa_wrapper(
         handle_result_callback=None,
 ):
     def ipa_wrapper(**validated_params):
+	
         # Get argument if present; the other params are options.
         argument = validated_params.pop(argument_name)
+
+        #At somepoint during processing of the options, seemingly in click.Option, the '-' in ip-address
+	#	is being replaced with an underscore
+	#I couldn't work out why so this is a messy fix for the time being
+        if 'ip_address' in validated_params:
+            validated_params['ip-address'] = validated_params['ip_address'] 
+            del validated_params['ip_address']
+
         options = validated_params
 
         args = _build_ipa_args(
@@ -57,9 +67,13 @@ def _create_ipa_wrapper(
             options=options,
             transform_options_callback=transform_options_callback
         )
-        result = ipa_utils.ipa_run(ipa_command, args)
-
-        handle_result_callback(argument, options, result)
+        
+        #if the command is modify host & there's only one item in the args list it's neccesary not to call
+        #   the ipa command as a) the option to modify it wouldn't do anything anyway and b) it woudl result
+        #   in a spurious error message if the --ip-address option has been removed in transform_options_callback
+        if not ipa_command == "host-mod" and len(args) == 1: 
+            result = ipa_utils.ipa_run(ipa_command, args)
+            handle_result_callback(argument, options, result)
 
     return ipa_wrapper
 
@@ -72,7 +86,6 @@ def _build_ipa_args(
         transform_options_callback=None
 ):
     args = []
-
     transformed_options = transform_options_callback(argument, options)
 
     # Click will give us `None` as the value for possible options which
