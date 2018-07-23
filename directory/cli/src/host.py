@@ -27,7 +27,6 @@ HOST_SHOW_FIELD_CONFIGS = HOST_LIST_FIELD_CONFIGS.copy()
 HOST_SHOW_FIELD_CONFIGS.update([
 ])
 
-# TODO add host blacklist
 HOST_BLACKLIST = ['controller', 'infra01', 'infra02', 'infra03']
 
 
@@ -73,7 +72,7 @@ def add_commands(directory):
 			ipa_command='host-add',
 			argument_name='hostname',
 			options=_host_options(),
-			transform_options_callback=_transform_create_options,
+			transform_options_callback=_transform_options,
 			help='Create new host'
 		),
 		ipa_wrapper_command.create(
@@ -81,12 +80,14 @@ def add_commands(directory):
 			ipa_command='host-mod',
 			argument_name='hostname',
 			options=_host_options(),
+            transform_options_callback=_transform_modify_options,
 			help='Modify existing host'
 		),
 		ipa_wrapper_command.create(
 			'delete',
 			ipa_command='host-del',
 			argument_name='hostname',
+            #transform_options_callback=_transform_options,
 			help='Delete existing host'
         )]
 	
@@ -105,9 +106,9 @@ def _get_ip():
 		try:	
 			command = 'dnsrecord-find'
 			host_name = host_data['Host name'][0]
-			host_name_text = re.sub(r'\..*$',"",host_name)
+			host_label = re.sub(r'\..*$',"",host_name)
 			domain_name = re.sub(r'^.*?\.',"",host_name)
-			host_name_instruct = '--name='+host_name_text
+			host_name_instruct = '--name='+host_label
 			args = [domain_name, host_name_instruct]
 
 			ip_result = ipa_utils.ipa_run(command, args, record=False)
@@ -132,7 +133,7 @@ def _hostgroups_by_name():
 def _all_hosts():
 	public_hosts = ipa_utils.ipa_find('host-find')
 	return public_hosts
-	
+
 
 def _all_hostgroups():
 	public_hostgroups = ipa_utils.ipa_find('hostgroup-find')
@@ -144,9 +145,31 @@ def _host_options():
 		'--ip-address': {'help': 'IP address of host'},
 	}
 
-def _transform_create_options(argument, options):
+def _transform_options(argument, options):
 	_validate_blacklist_hosts(argument)
 	return options
+
+def _transform_modify_options(argument,options):
+    _validate_blacklist_hosts(argument)
+    #ipa handles host ip addresses differently from other data so a conditional is 
+    #   neccessary for if a user's trying to modify a host's ip
+    if not options['ip-address'] == None:
+        new_ip = options['ip-address']
+        del options['ip-address']
+        #this is required to find the host's domain name
+        all_hosts = _all_hosts()
+        host = {} 
+        for host_data in all_hosts:
+            #TODO check this can't cause conflicts, can two hosts have the same server name?
+            if host_data['serverhostname'][0] == argument or host_data['Host name'][0] == argument:
+                host = host_data
+                break
+        host_name = host['Host name'][0]
+        domain_name = re.sub(r'^.*?\.',"",host_name)
+        host_label = re.sub(r'\..*$',"",host_name)
+        args = [domain_name, host_label , '--a-rec='+new_ip]
+        ipa_utils.ipa_run('dnsrecord-mod', args, record=False) 
+    return options
 
 def _validate_blacklist_hosts(argument, options={}):
 	if argument in HOST_BLACKLIST:

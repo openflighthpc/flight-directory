@@ -67,9 +67,13 @@ def _create_ipa_wrapper(
             options=options,
             transform_options_callback=transform_options_callback
         )
-        result = ipa_utils.ipa_run(ipa_command, args)
-
-        handle_result_callback(argument, options, result)
+        
+        #if the command is modify host & there's only one item in the args list it's neccesary not to call
+        #   the ipa command as a) the option to modify it wouldn't do anything anyway and b) it woudl result
+        #   in a spurious error message if the --ip-address option has been removed in transform_options_callback
+        if not ipa_command == "host-mod" and len(args) == 1: 
+            result = ipa_utils.ipa_run(ipa_command, args)
+            handle_result_callback(argument, options, result)
 
     return ipa_wrapper
 
@@ -82,7 +86,6 @@ def _build_ipa_args(
         transform_options_callback=None
 ):
     args = []
-
     transformed_options = transform_options_callback(argument, options)
 
     # Click will give us `None` as the value for possible options which
