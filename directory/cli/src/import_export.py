@@ -22,6 +22,9 @@ SESSION.mount('file://', FileAdapter())
 
 def add_commands(directory):
 
+    if appliance_cli.utils.in_sandbox():
+        return
+
     @directory.command(
         name='import',
         help='Import a Directory record from a URL'
@@ -128,9 +131,8 @@ def _record_export_success_message(export_filepath):
 
     parts = [success, download_info, _auth_details()]
 
-    if not appliance_cli.utils.in_sandbox():
-        # If we're in the directory sandbox we may not have access to files on
-        # the appliance, so we don't want to show local access info.
+    # If we're in the directory sandbox we may not have access to files on
+    # the appliance, so we don't want to show local access info.
         local_file_info = '\nIt can also be viewed locally at {}.'.format(
             export_filepath
         )

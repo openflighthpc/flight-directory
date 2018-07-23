@@ -14,6 +14,9 @@ import appliance_cli.text as text
 
 def add_commands(appliance):
 
+    if utils.in_sandbox():
+        return
+
     @appliance.group(help='Manage Alces Flight Support access')
     def support():
         pass
