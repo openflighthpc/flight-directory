@@ -131,8 +131,10 @@ def _record_export_success_message(export_filepath):
 
     parts = [success, download_info, _auth_details()]
 
-    # If we're in the directory sandbox we may not have access to files on
-    # the appliance, so we don't want to show local access info.
+    if not appliance_cli.utils.in_sandbox():
+    # As it stands all this functionality is unreachable from within the directory sandbox but
+    # if it were to be re-enabled in the sandbox we may not have access to files on the appliance
+    # so we don't want to show local access info if not currently in the sandbox
         local_file_info = '\nIt can also be viewed locally at {}.'.format(
             export_filepath
         )

@@ -111,7 +111,7 @@ def _get_ip():
 			host_name_instruct = '--name='+host_label
 			args = [domain_name, host_name_instruct]
 
-			ip_result = ipa_utils.ipa_run(command, args, record=False)
+			ip_result = ipa_utils.ipa_run(command, args, record=True)
 			ip_result_parsed = ipa_utils.parse_find_output(ip_result)
 			ip_address_dict = ip_result_parsed[0]
 			ip_address_list = ip_address_dict["A record"]
@@ -168,7 +168,7 @@ def _transform_modify_options(argument,options):
         domain_name = re.sub(r'^.*?\.',"",host_name)
         host_label = re.sub(r'\..*$',"",host_name)
         args = [domain_name, host_label , '--a-rec='+new_ip]
-        ipa_utils.ipa_run('dnsrecord-mod', args, record=False) 
+        ipa_utils.ipa_run('dnsrecord-mod', args, record=True) 
     return options
 
 def _validate_blacklist_hosts(argument, options={}):
