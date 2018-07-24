@@ -38,10 +38,8 @@ setup() {
   create_barney_user
   ipa group-add-member flintstones --users={fred,barney}
 
-  output="$("$DIRECTORY_CLI" group list)"
+  output="$("$DIRECTORY_CLI" group show flintstones)"
   echo "$output" | \
-    # Get 1 line after so we can check 'barney' is present on that line.
-    grep -A 1 'flintstones.*Cutting_edge_stone_research.*fred' | \
     grep 'barney'
 }
 
