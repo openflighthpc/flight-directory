@@ -182,6 +182,8 @@ def _transform_create_options(argument, options):
 
 
 def _validate_create_uid(uid):
+    if not uid:
+        return
     try:
         user_find_args = ['--uid={}'.format(uid)]
         matching_user_uid = ipa_utils.ipa_find('user-find', user_find_args)
