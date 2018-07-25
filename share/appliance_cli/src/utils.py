@@ -62,7 +62,7 @@ def read_config(config_file_path):
 
 def in_sandbox():
     # We're in the sandbox if the program was started with the 'sandbox' arg.
-    return sys.argv[1] == 'sandbox'
+    return len(sys.argv) > 1 and sys.argv[1] == 'sandbox'
 
 
 def is_valid_ssh_public_key(string):
