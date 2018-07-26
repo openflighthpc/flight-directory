@@ -34,6 +34,7 @@ def _support_eject_success_message(appliance_url=None):
 
 _DIRECTORY_CONFIG = {
     'DIRECTORY_RECORD': join(_STANDARD_CONFIG['APPLIANCE_DIR'], 'record'),
+    'DIRECTORY_LOG': join(_STANDARD_CONFIG['APPLIANCE_DIR'], 'log.csv'),
 
     'PASSWORD_KEY': 'IPAPASSWORD',
 
