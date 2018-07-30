@@ -1,4 +1,3 @@
-
 import click
 from click import ClickException, Group
 import shlex
@@ -10,6 +9,7 @@ import group
 import host
 import hostgroup
 import import_export
+import logger
 from appliance_cli.commands import command_modules as standard_command_modules
 from exceptions import IpaRunError
 
@@ -26,24 +26,33 @@ class DirectoryGroup(Group):
         ctx.meta[CONFIG.ORIGINAL_COMMAND_META_KEY] = original_command
         return Group.parse_args(self, ctx, args)
 
-    def invoke(self, ctx):
+    def _log_and_run_cmd(self, ctx):
         try:
             super().invoke(ctx)
+            logger.write_log(args=["Success"])
+        except Exception as error:
+            error_str = str(error)
+            error_str.strip()
+            logger.write_log(args=["Failure: " + error_str])
+            raise error
+
+    def invoke(self, ctx):
+        try:
+            DirectoryGroup._log_and_run_cmd(self, ctx)
         except IpaRunError as ex:
             # Convert any unhandled `IpaRunError` to a `ClickException`, for
             # nice error display.
             raise ClickException(ex.message)
 
-
 @click.command(
     cls=DirectoryGroup,
     help='Perform Flight Directory management tasks.'
 )
+
 def directory():
     # TODO: This might not be needed for all directory subcommands; should
     # maybe move calling so only done if needed.
     utils.obtain_kerberos_ticket()
-
 
 command_modules = standard_command_modules + [user, group, import_export, host, hostgroup]
 

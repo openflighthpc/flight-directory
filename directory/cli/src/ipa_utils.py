@@ -87,8 +87,8 @@ def ipa_run(ipa_command, args=[], error_in_stdout=False, record=True):
 
 def _record_command():
     with open(CONFIG.DIRECTORY_RECORD, 'a') as record:
-        log_string = utils.original_command() + '\n'
-        record.write(log_string)
+        record_string = utils.original_command() + '\n'
+        record.write(record_string)
 
 
 # Wrapper around `ipa_run` for find commands, to always get all fields and
