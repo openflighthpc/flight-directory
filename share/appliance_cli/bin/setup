@@ -4,7 +4,7 @@
 sudo yum install -y https://centos7.iuscommunity.org/ius-release.rpm
 sudo yum install -y python35u python35u-pip
 sudo pip3.5 install virtualenv
-sudo yum remove ius-release
+sudo yum remove -y ius-release
 
 # Setup Virtualenv.
 if [ ! -d venv ]; then
