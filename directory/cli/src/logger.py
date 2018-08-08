@@ -28,7 +28,7 @@ def write_log(args):
     for num in range(len(args)): 
         args[num] = re.sub(r'\n','',args[num])
 
-    row = [cmd, str(time), str(env_vars)] + args
+    row = [ str(time), cmd, str(env_vars)] + args
 
     with open(CONFIG.DIRECTORY_LOG, mode='a', newline='') as csvfile:
         logwriter = csv.writer(csvfile, delimiter = ',', quotechar = '"', quoting = csv.QUOTE_MINIMAL)
