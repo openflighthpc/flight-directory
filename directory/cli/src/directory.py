@@ -31,9 +31,19 @@ class DirectoryGroup(Group):
             super().invoke(ctx)
             logger.write_log(args=["Success"])
         except Exception as error:
-            error_str = str(error)
+            args = ["Failure"]
+            # some click exceptions (e.g. MissingParameter) don't have human readable standard 
+            #   output so this is neccessary to log them fully
+            if hasattr(error, 'format_message'):
+                error_str = error.format_message()
+            else:
+                error_str = str(error)
             error_str.strip()
-            logger.write_log(args=["Failure: " + error_str])
+            if type(error):
+                args[0] = args[0] + ": " + error.__class__.__name__ 
+            if (error_str and not error_str=="None"):
+                args[0] = args[0] + ": " + error_str
+            logger.write_log(args)
             raise error
 
     def invoke(self, ctx):
