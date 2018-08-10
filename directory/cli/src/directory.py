@@ -29,7 +29,7 @@ class DirectoryGroup(Group):
     def _log_and_run_cmd(self, ctx):
         try:
             super().invoke(ctx)
-            logger.write_log(args=["Success"])
+            logger.log_cmd(args=["Success"])
         except Exception as error:
             args = ["Failure"]
             # some click exceptions (e.g. MissingParameter) don't have human readable standard 
@@ -43,7 +43,7 @@ class DirectoryGroup(Group):
                 args[0] = args[0] + ": " + error.__class__.__name__ 
             if (error_str and not error_str=="None"):
                 args[0] = args[0] + ": " + error_str
-            logger.write_log(args)
+            logger.log_cmd(args)
             raise error
 
     def invoke(self, ctx):
@@ -65,6 +65,8 @@ def directory():
     utils.obtain_kerberos_ticket()
 
 command_modules = standard_command_modules + [user, group, import_export, host, hostgroup]
+
+logger.write_to_log(["Access"])
 
 for module in command_modules:
     module.add_commands(directory)

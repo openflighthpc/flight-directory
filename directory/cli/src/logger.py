@@ -6,17 +6,9 @@ import re
 import utils
 from config import CONFIG 
 
-def write_log(args):
-    
-    time = datetime.datetime.now().replace(microsecond=0)
-    
-    env_vars = {}
-    #env_vars['USER'] = os.getenv("SUDO_USER")
-    for var in os.environ:
-        if var.startswith("FC_"):
-            env_vars[var]=os.getenv(var)
-
+def log_cmd(args):
     cmd = utils.original_command()
+
     # regex for replacing any passwords in the logs with asterisks
     if re.search(r'--password', cmd):
         if re.search(r'(?<= --password( |=)).*(?= \-\-)', cmd):
@@ -28,9 +20,19 @@ def write_log(args):
     for num in range(len(args)): 
         args[num] = re.sub(r'\n','',args[num])
 
-    row = [ str(time), cmd, str(env_vars)] + args
+    row = [cmd] + args
+    write_to_log(row)
+
+def write_to_log(row):
+    time = str(datetime.datetime.now().replace(microsecond=0))
+
+    env_vars = {}
+    for var in os.environ:
+        if var.startswith("FC_"):
+            env_vars[var]=os.getenv(var)
+
+    row = [time, env_vars] + row
 
     with open(CONFIG.DIRECTORY_LOG, mode='a', newline='') as csvfile:
         logwriter = csv.writer(csvfile, delimiter = ',', quotechar = '"', quoting = csv.QUOTE_MINIMAL)
-        #A row must be an iterable of strings or numbers for Writer objects
         logwriter.writerow(row)
