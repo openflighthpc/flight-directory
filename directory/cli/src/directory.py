@@ -1,6 +1,7 @@
 import click
 from click import ClickException, Group
 import shlex
+import atexit
 
 from config import CONFIG
 import utils
@@ -11,6 +12,7 @@ import hostgroup
 import import_export
 import logger
 from appliance_cli.commands import command_modules as standard_command_modules
+from appliance_cli.sandbox import ExitSandboxException
 from exceptions import IpaRunError
 
 
@@ -30,9 +32,13 @@ class DirectoryGroup(Group):
         try:
             super().invoke(ctx)
             logger.log_cmd(args=["Success"])
+        # This line means that the actual 'exit' command is ignored from the log (as it throws an ExitSandboxException)
+        # Instead we write to the log immediately after, as the sandbox exits, with the original command retrieved from the Click context
+        except ExitSandboxException:
+            raise
         except Exception as error:
             args = ["Failure"]
-            # some click exceptions (e.g. MissingParameter) don't have human readable standard 
+            # some click exceptions (e.g. MissingParameter) don't have human readable standard
             #   output so this is neccessary to log them fully
             if hasattr(error, 'format_message'):
                 error_str = error.format_message()
@@ -40,7 +46,7 @@ class DirectoryGroup(Group):
                 error_str = str(error)
             error_str.strip()
             if type(error):
-                args[0] = args[0] + ": " + error.__class__.__name__ 
+                args[0] = args[0] + ": " + error.__class__.__name__
             if (error_str and not error_str=="None"):
                 args[0] = args[0] + ": " + error_str
             logger.log_cmd(args)
@@ -52,6 +58,7 @@ class DirectoryGroup(Group):
         except IpaRunError as ex:
             # Convert any unhandled `IpaRunError` to a `ClickException`, for
             # nice error display.
+            print (type(ex))
             raise ClickException(ex.message)
 
 @click.command(
@@ -66,7 +73,7 @@ def directory():
 
 command_modules = standard_command_modules + [user, group, import_export, host, hostgroup]
 
-logger.write_to_log(["Access"])
-
 for module in command_modules:
     module.add_commands(directory)
+
+logger.write_to_log(["access", "Success"])
