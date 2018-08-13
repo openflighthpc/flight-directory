@@ -33,7 +33,7 @@ class DirectoryGroup(Group):
         try:
             super().invoke(ctx)
             logger.log_cmd(args=["Success"])
-        # This line means that the actual 'exit' command is ignored from the log (as it throws an ExitSandboxException)
+        # Ignores the actual 'exit' command from the log (as it throws an ExitSandboxException)
         # Instead we write to the log immediately after, as the sandbox exits, with the original command retrieved from the Click context
         except ExitSandboxException:
             raise
