@@ -16,10 +16,6 @@ def log_cmd(args):
         elif re.search(r'(?<= --password( |=)).*(?=$)', cmd):
             cmd = re.sub(r'(?<= --password( |=)).*(?=$)', '********', cmd)
 
-    #some errors seem to come packaged with pesky newlines, .strip() wasn't working for whatever reason
-    for num in range(len(args)): 
-        args[num] = re.sub(r'\n','',args[num])
-
     row = [cmd] + args
     write_to_log(row)
 

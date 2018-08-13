@@ -2,6 +2,7 @@ import click
 from click import ClickException, Group
 import shlex
 import atexit
+import re
 
 from config import CONFIG
 import utils
@@ -44,10 +45,15 @@ class DirectoryGroup(Group):
                 error_str = error.format_message()
             else:
                 error_str = str(error)
-            error_str.strip()
-            if type(error):
+            if error.__class__.__name__:
                 args[0] = args[0] + ": " + error.__class__.__name__
             if (error_str and not error_str=="None"):
+                # some errors came packaged with newlines & strip wasn't working for some reason
+                error_str = re.sub(r'\n','',error_str)
+                # deleting non consecutive quotes
+                error_str = re.sub(r'(?<!\")\"(?!\")','',error_str)
+                # replacing consecutive quotes with single quotes
+                error_str = re.sub(r'""','"',error_str)
                 args[0] = args[0] + ": " + error_str
             logger.log_cmd(args)
             raise error
@@ -58,7 +64,6 @@ class DirectoryGroup(Group):
         except IpaRunError as ex:
             # Convert any unhandled `IpaRunError` to a `ClickException`, for
             # nice error display.
-            print (type(ex))
             raise ClickException(ex.message)
 
 @click.command(
@@ -70,6 +75,8 @@ def directory():
     # TODO: This might not be needed for all directory subcommands; should
     # maybe move calling so only done if needed.
     utils.obtain_kerberos_ticket()
+
+atexit.register(logger.write_to_log, ["exit (via EOF command)", "Success"])
 
 command_modules = standard_command_modules + [user, group, import_export, host, hostgroup]
 
