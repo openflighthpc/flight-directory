@@ -76,16 +76,24 @@ def do(
     if blacklist_key:
         item_dicts = [item_dict for item_dict in item_dicts if item_dict[blacklist_key][0] not in blacklist_val_array]
         
+
     if sort_key:
         item_dicts.sort(key=itemgetter(sort_key))
 
     headers = field_configs.keys()
-    results_data = _create_data(
-        item_dicts,
-        field_configs,
-        generate_additional_data()
-    )
-    display(headers, results_data)
+
+    # this condition ensures that ipa_find isn't run against no entries, which it reports as an error
+    # more specifically, when `user list` is called `generate_additional_data` involves calling `ipa group-find --private`
+    #   which, as there are only private groups created for each user, if there are no users queries against an empty list and returns an error
+    if not item_dicts == []:
+        results_data = _create_data(
+            item_dicts,
+            field_configs,
+            generate_additional_data()
+        )
+        display(headers, results_data)
+    else:
+        display(headers, [])
 
 
 def _create_data(item_dicts, field_configs, additional_data):
