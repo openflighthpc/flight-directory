@@ -39,25 +39,7 @@ class DirectoryGroup(Group):
         except ExitSandboxException:
             raise
         except Exception as error:
-            args = ["Failure"]
-            # some click exceptions (e.g. MissingParameter) don't have human readable standard
-            #   output so this is neccessary to log them fully
-            if hasattr(error, 'format_message'):
-                error_str = error.format_message()
-            else:
-                error_str = str(error)
-            if error.__class__.__name__:
-                args[0] = args[0] + ": " + error.__class__.__name__
-            if (error_str and not error_str=="None"):
-                # some errors came packaged with newlines & strip wasn't working for some reason
-                error_str = re.sub(r'\n','',error_str)
-                # Error strings have many uneccessary quotes. All those that are valid are duplicated
-                #   deleting non consecutive quotes
-                error_str = re.sub(r'(?<!\")\"(?!\")','',error_str)
-                #   replacing consecutive quotes with single quotes
-                error_str = re.sub(r'""','"',error_str)
-                args[0] = args[0] + ": " + error_str
-            logger.log_cmd(args)
+            logger.log_cmd(args=["Failure"], error=error)
             raise error
 
     def invoke(self, ctx):
