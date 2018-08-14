@@ -44,7 +44,7 @@ def add_commands(directory):
 			sort_key='Host name',
 			generate_additional_data=_additional_data_for_list,
 			blacklist_key='Host name',
-			blacklist_val_array=HOST_BLACKLIST,
+			blacklist_val_array=_expand_host_blacklist(),
 		)
 
 	@host.command(help='Show detailed information on a host')		
@@ -80,14 +80,14 @@ def add_commands(directory):
 			ipa_command='host-mod',
 			argument_name='hostname',
 			options=_host_options(),
-            transform_options_callback=_transform_modify_options,
+                        transform_options_callback=_transform_modify_options,
 			help='Modify existing host'
 		),
 		ipa_wrapper_command.create(
 			'delete',
 			ipa_command='host-del',
 			argument_name='hostname',
-            #transform_options_callback=_transform_options,
+                        transform_options_callback=_transform_options,
 			help='Delete existing host'
         )]
 	
@@ -151,7 +151,7 @@ def _transform_options(argument, options):
 
 def _transform_modify_options(argument,options):
     _validate_blacklist_hosts(argument)
-    #ipa handles host ip addresses differently from other data so a conditional is 
+    # ipa handles host ip addresses differently from other data so a conditional is
     #   neccessary for if a user's trying to modify a host's ip
     if not options['ip-address'] == None:
         new_ip = options['ip-address']
@@ -161,6 +161,7 @@ def _transform_modify_options(argument,options):
         host = {} 
         for host_data in all_hosts:
             #TODO check this can't cause conflicts, can two hosts have the same server name?
+            # this or stmt is neccessary as modify can be called with either qualified or unqualified host name as it's argument
             if host_data['serverhostname'][0] == argument or host_data['Host name'][0] == argument:
                 host = host_data
                 break
@@ -172,7 +173,16 @@ def _transform_modify_options(argument,options):
     return options
 
 def _validate_blacklist_hosts(argument, options={}):
-	if argument in HOST_BLACKLIST:
-		error = "The host " + argument + " is a restricted host"
-		raise click.ClickException(error)
+    # need to check the argument against both qualified and unqualified host names
+    argument = re.sub(r'\..*$',"",argument)
+    if argument in HOST_BLACKLIST:
+        error = "The host " + argument + " is a restricted host"
+        raise click.ClickException(error)
 
+def _expand_host_blacklist():
+    _modified_host_blacklist = HOST_BLACKLIST
+    all_hosts =  _all_hosts()
+    for host_data in all_hosts:
+        if host_data['serverhostname'][0] in _modified_host_blacklist:
+            _modified_host_blacklist= _modified_host_blacklist + [host_data['Host name'][0]]
+    return _modified_host_blacklist
