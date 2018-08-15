@@ -59,7 +59,6 @@ def add_commands(directory):
 
     @hostgroup.command(name='add-member', help='Add host(s) to a host group')
     @click.argument('hostgroup_name')
-    # make this take at least 1
     @click.argument('hosts', nargs=-1, required=True)
     def add_member(hostgroup_name, hosts):
         _validate_blacklist_hostgroups(hostgroup_name, hosts)
