@@ -63,7 +63,7 @@ def add_commands(directory):
     # TODO duplication
     @group.command(name='add-member', help='Add user(s) to a group')
     @click.argument('group_name')
-    @click.argument('users', nargs=-1)
+    @click.argument('users', nargs=-1, required=True)
     def add_member(group_name, users):
         _validate_blacklist_groups(group_name, users)
         user_options = ['--users={}'.format(user) for user in users]
@@ -77,7 +77,7 @@ def add_commands(directory):
 
     @group.command(name='remove-member', help='Remove user(s) from a group')
     @click.argument('group_name')
-    @click.argument('users', nargs=-1)
+    @click.argument('users', nargs=-1, required=True)
     def remove_member(group_name, users):
         _validate_blacklist_groups(group_name, users)
         user_options = ['--users={}'.format(user) for user in users]

@@ -59,7 +59,8 @@ def add_commands(directory):
 
     @hostgroup.command(name='add-member', help='Add host(s) to a host group')
     @click.argument('hostgroup_name')
-    @click.argument('hosts', nargs=-1)
+    # make this take at least 1
+    @click.argument('hosts', nargs=-1, required=True)
     def add_member(hostgroup_name, hosts):
         _validate_blacklist_hostgroups(hostgroup_name, hosts)
         host_options = ['--hosts={}'.format(host) for host in hosts]
@@ -73,7 +74,7 @@ def add_commands(directory):
 
     @hostgroup.command(name='remove-member', help='Remove host(s) from a host group')
     @click.argument('hostgroup_name')
-    @click.argument('hosts', nargs=-1)
+    @click.argument('hosts', nargs=-1, required=True)
     def remove_member(hostgroup_name, hosts):
         _validate_blacklist_hostgroups(hostgroup_name, hosts)
         host_options = ['--hosts={}'.format(host) for host in hosts]
