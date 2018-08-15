@@ -53,6 +53,13 @@ def _create_ipa_wrapper(
         # Get argument if present; the other params are options.
         argument = validated_params.pop(argument_name)
 
+        #At somepoint during processing of the options, seemingly in click.Option, the '-' in ip-address
+	    #	is being replaced with an underscore
+	    #I couldn't work out why so this is a messy fix for the time being
+        if 'ip_address' in validated_params:
+            validated_params['ip-address'] = validated_params['ip_address'] 
+            del validated_params['ip_address']
+
         options = validated_params
 
         args = _build_ipa_args(

@@ -162,9 +162,9 @@ def _transform_modify_options(argument,options):
     _validate_blacklist_hosts(argument)
     # ipa handles host ip addresses differently from other data so a conditional is
     #   neccessary for if a user's trying to modify a host's ip
-    if not options['ip_address'] == None:
-        _modify_ip(argument, new_ip=options['ip_address'])
-        del options['ip_address']
+    if not options['ip-address'] == None:
+        _modify_ip(argument, new_ip=options['ip-address'])
+        del options['ip-address']
     return options
 
 def _modify_ip(argument, new_ip):
