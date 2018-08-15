@@ -154,23 +154,30 @@ def _transform_modify_options(argument,options):
     # ipa handles host ip addresses differently from other data so a conditional is
     #   neccessary for if a user's trying to modify a host's ip
     if not options['ip-address'] == None:
-        new_ip = options['ip-address']
+        _modify_ip(argument, new_ip=options['ip-address'])
         del options['ip-address']
-        #this is required to find the host's domain name
-        all_hosts = _all_hosts()
-        host = {} 
-        for host_data in all_hosts:
-            #TODO check this can't cause conflicts, can two hosts have the same server name?
-            # this or stmt is neccessary as modify can be called with either qualified or unqualified host name as it's argument
-            if host_data['serverhostname'][0] == argument or host_data['Host name'][0] == argument:
-                host = host_data
-                break
+    return options
+
+def _modify_ip(argument, new_ip):
+    # it is required to find the host's domain name
+    host = {}
+    all_hosts = _all_hosts()
+    for host_data in all_hosts:
+        #TODO check this can't cause conflicts, can two hosts have the same server name?
+        # this or stmt is neccessary as modify can be called with either qualified or unqualified host name as it's argument
+        if host_data['serverhostname'][0] == argument or host_data['Host name'][0] == argument:
+            host = host_data
+            break
+    if not host == {}:
         host_name = host['Host name'][0]
         domain_name = re.sub(r'^.*?\.',"",host_name)
         host_label = re.sub(r'\..*$',"",host_name)
         args = [domain_name, host_label , '--a-rec='+new_ip]
-        ipa_utils.ipa_run('dnsrecord-mod', args, record=True) 
-    return options
+        ipa_utils.ipa_run('dnsrecord-mod', args, record=True)
+    else:
+        error = "The host " + argument + " does not exist"
+        raise click.ClickException(error)
+
 
 def _validate_blacklist_hosts(argument, options={}):
     # need to check the argument against both qualified and unqualified host names
