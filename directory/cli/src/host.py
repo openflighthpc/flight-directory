@@ -184,7 +184,7 @@ def _modify_ip(argument, new_ip):
         args = [domain_name, host_label , '--a-rec='+new_ip]
         ipa_utils.ipa_run('dnsrecord-mod', args, record=True)
     else:
-        error = "The host " + argument + " does not exist"
+        error = "Host " + argument + " not found"
         raise click.ClickException(error)
 
 def _transform_delete_options(argument, options):
