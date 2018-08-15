@@ -65,7 +65,11 @@ def add_commands(directory):
         host_options = ['--hosts={}'.format(host) for host in hosts]
         ipa_command = 'hostgroup-add-member'
         args = [hostgroup_name] + host_options
-        ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        try:
+            ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        except IpaRunError:
+            error = "Host group add member failed"
+            raise click.ClickException(error)
 
     @hostgroup.command(name='remove-member', help='Remove host(s) from a host group')
     @click.argument('hostgroup_name')
@@ -75,7 +79,11 @@ def add_commands(directory):
         host_options = ['--hosts={}'.format(host) for host in hosts]
         ipa_command = 'hostgroup-remove-member'
         args = [hostgroup_name] + host_options
-        ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        try:
+            ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        except IpaRunError:
+            error = "Host group remove member failed"
+            raise click.ClickException(error)
 
 
     wrapper_commands = [

@@ -69,7 +69,11 @@ def add_commands(directory):
         user_options = ['--users={}'.format(user) for user in users]
         ipa_command = 'group-add-member'
         args = [group_name] + user_options
-        ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        try:
+            ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        except IpaRunError:
+            error = "Group add member failed"
+            raise click.ClickException(error)
 
     @group.command(name='remove-member', help='Remove user(s) from a group')
     @click.argument('group_name')
@@ -79,7 +83,11 @@ def add_commands(directory):
         user_options = ['--users={}'.format(user) for user in users]
         ipa_command = 'group-remove-member'
         args = [group_name] + user_options
-        ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        try:
+            ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        except IpaRunError:
+            error = "Group remove member failed"
+            raise click.ClickException(error)
 
     wrapper_commands = [
         ipa_wrapper_command.create(
