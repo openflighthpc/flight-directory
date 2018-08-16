@@ -63,23 +63,29 @@ def add_commands(directory):
     # TODO duplication
     @group.command(name='add-member', help='Add user(s) to a group')
     @click.argument('group_name')
-    @click.argument('users', nargs=-1)
+    @click.argument('users', nargs=-1, required=True)
     def add_member(group_name, users):
         _validate_blacklist_groups(group_name, users)
         user_options = ['--users={}'.format(user) for user in users]
         ipa_command = 'group-add-member'
         args = [group_name] + user_options
-        ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        try:
+            ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        except IpaRunError:
+            _diagnose_member_command_error(group_name, users, add_command=True)
 
     @group.command(name='remove-member', help='Remove user(s) from a group')
     @click.argument('group_name')
-    @click.argument('users', nargs=-1)
+    @click.argument('users', nargs=-1, required=True)
     def remove_member(group_name, users):
         _validate_blacklist_groups(group_name, users)
         user_options = ['--users={}'.format(user) for user in users]
         ipa_command = 'group-remove-member'
         args = [group_name] + user_options
-        ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        try:
+            ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        except IpaRunError:
+            _diagnose_member_command_error(group_name, users, add_command=False)
 
     wrapper_commands = [
         ipa_wrapper_command.create(
@@ -115,3 +121,43 @@ def _validate_blacklist_groups(argument, options={}):
         error = "The group " + argument + " is a restricted group"
         raise click.ClickException(error)
     return options
+
+# this method can be computationally taxing, should be disabled if speed becomes an issue
+def _diagnose_member_command_error(group_name, users, add_command=False):
+    if add_command:
+        error = "Group-add error: "
+    else:
+        error = "Group-remove error: "
+
+    # first checking if group exists
+    all_groups = ipa_utils.ipa_find('group-find')
+    group_found = False
+    for group in all_groups:
+        if group['Group name'][0] == group_name:
+            group_found = True
+            break
+    if not group_found:
+        error = error + '{} - group not found'.format(group_name)
+        raise click.ClickException(error)
+
+    # the other errors are non-castrophic
+    error = "Non-fatal " + error
+    # next checking if each host in hosts exists
+    all_users = ipa_utils.ipa_find('user-find')
+    for user in users:
+        user_found = False
+        for user_data in all_users:
+            if user_data['User login'][0] == user:
+                user_found = True
+                break
+        if not user_found:
+            error = error + '{} - user not found'.format(user)
+            raise click.ClickException(error)
+
+    # then report that a user was likely already in/not in the group
+    if add_command:
+        error = error + "Were one or more of the users already in the group?"
+        raise click.ClickException(error)
+    else:
+        error = error + "Were one or more of the users not in the group?"
+        raise click.ClickException(error)
