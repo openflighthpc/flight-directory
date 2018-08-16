@@ -68,8 +68,7 @@ def add_commands(directory):
         try:
             ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
         except IpaRunError:
-            error = "Host group add member failed"
-            raise click.ClickException(error)
+            _diagnose_member_command_error(hostgroup_name, hosts, add_command=True)
 
     @hostgroup.command(name='remove-member', help='Remove host(s) from a host group')
     @click.argument('hostgroup_name')
@@ -82,8 +81,7 @@ def add_commands(directory):
         try:
             ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
         except IpaRunError:
-            error = "Host group remove member failed"
-            raise click.ClickException(error)
+            _diagnose_member_command_error(hostgroup_name, hosts, add_command=False)
 
 
     wrapper_commands = [
@@ -123,4 +121,44 @@ def _transform_options(argument, options):
 def _validate_blacklist_hostgroups(argument, options={}):
     if argument in HOSTGROUP_BLACKLIST:
         error = "The host group " + argument + " is a resricted hostgroup"
+        raise click.ClickException(error)
+
+# this method can be computationally taxing, should be disabled if speed becomes an issue
+def _diagnose_member_command_error(hostgroup_name, hosts, add_command=False):
+    if add_command:
+        error = "Hostgroup-add error: "
+    else:
+        error = "Hostgroup-remove error: "
+
+    # first checking if hostgroup exists
+    all_hostgroups = ipa_utils.ipa_find('hostgroup-find')
+    group_found = False
+    for hostgroup in all_hostgroups:
+        if hostgroup['Host-group'][0] == hostgroup_name:
+            group_found = True
+            break
+    if not group_found:
+        error = error + '{} - hostgroup not found'.format(hostgroup_name)
+        raise click.ClickException(error)
+
+    # the other errors are non-castrophic
+    error = "Non-fatal " + error
+    # next checking if each host in hosts exists
+    all_hosts = ipa_utils.ipa_find('host-find')
+    for host in hosts:
+        host_found = False
+        for host_data in all_hosts:
+            if host_data['serverhostname'][0] == host or host_data['Host name'][0] == host:
+                host_found = True
+                break
+        if not host_found:
+            error = error + '{} - host not found'.format(host)
+            raise click.ClickException(error)
+
+    # then report that a host was likely already in/not in the group
+    if add_command:
+        error = error + "Were one or more of the hosts already in the group?"
+        raise click.ClickException(error)
+    else:
+        error = error + "Were one or more of the hosts not in the group?"
         raise click.ClickException(error)
