@@ -2,6 +2,7 @@
 import click
 from operator import itemgetter
 import re
+import socket
 
 import ipa_utils
 import appliance_cli.text as text
@@ -112,9 +113,9 @@ def _create_row(item_dict, field_configs, additional_data):
 def _display_value_for(item_dict, field_config, additional_data):
     name, generator = field_config
     value = generator(name, item_dict, additional_data)
+    # as ips are recieved individually & just as strings
     if name == 'ip-address':
-        value_concat = ''.join(value)
-        return re.sub(r', ',',\\n',value_concat)
+        return value
     else:
         return '\n'.join(value)
 
@@ -146,26 +147,8 @@ def group_with_users_gid(field_name, item_dict, additional_data):
         pass
     return group_name
 
-def hostgroup_with_host_group_name(field_name, item_dict, additional_data):
-    hostgroup_name = ""
-    host_group_name = item_dict['Host-group'][0]
-    hostgroups_by_group_name = additional_data['hostgroups']
-    try:
-        host_hostgroup = hostgroups_by_group_name[host_group_name]
-        hostgroup_name = host_hostgroup['Host-group']
-    #If the key doesn't exist we want to skip it & return the empty string
-    except KeyError:
-        pass
-    return host_group_name
-
 def host_with_ip(field_name, item_dict, additional_data):
-    host_ips_str = ""
-    host_name = item_dict['Host name'][0]
-    ip_addresses = additional_data['ip-address']
     try:
-        host_ips = ip_addresses[host_name]
-        host_ips_str = ", ".join(host_ips)
-    #If the key doesn't exist we want to skip it & return the empty string
-    except KeyError:
-        pass
-    return host_ips_str
+        return socket.gethostbyname(item_dict['Host name'][0])
+    except socket.gaierror:
+        return None

@@ -6,7 +6,6 @@ import list_command
 from list_command import \
     field_with_same_name, \
     field_with_name, \
-    hostgroup_with_host_group_name, \
     host_with_ip
 import ipa_wrapper_command
 import ipa_utils
@@ -42,7 +41,6 @@ def add_commands(directory):
             ipa_find_command='host-find',
 	    field_configs=HOST_LIST_FIELD_CONFIGS,
 	    sort_key='Host name',
-	    generate_additional_data=_additional_data_for_list,
 	    blacklist_key='Host name',
 	    blacklist_val_array=_expand_host_blacklist(),
 	)
@@ -57,7 +55,6 @@ def add_commands(directory):
                 ipa_find_command='host-find',
                 ipa_find_args=host_find_args,
                 field_configs=HOST_SHOW_FIELD_CONFIGS,
-                generate_additional_data=_additional_data_for_list,
                 display=list_command.list_displayer
             )
         except IpaRunError:
@@ -94,42 +91,6 @@ def add_commands(directory):
 	
     for command in wrapper_commands:
         host.add_command(command)
-
-def _additional_data_for_list():
-    return{
-	'ip-address': _get_ip(),
-	'hostgroups': _hostgroups_by_name()
-    }
-
-def _get_ip():
-    host_ips_by_name = {}
-    for host_data in _all_hosts():
-        try:
-            command = 'dnsrecord-find'
-            host_name = host_data['Host name'][0]
-            host_label = re.sub(r'\..*$',"",host_name)
-            domain_name = re.sub(r'^.*?\.',"",host_name)
-            host_name_instruct = '--name='+host_label
-            args = [domain_name, host_name_instruct]
-
-            ip_result = ipa_utils.ipa_run(command, args, record=True)
-            ip_result_parsed = ipa_utils.parse_find_output(ip_result)
-            ip_address_dict = ip_result_parsed[0]
-            ip_address_list = ip_address_dict["A record"]
-            host_ips_by_name[host_name] = ip_address_list
-        except KeyError:
-            continue
-    return host_ips_by_name
-	
-def _hostgroups_by_name():
-    hostgroups_by_name = {}
-    for hostgroup_data in _all_hostgroups():
-        try:
-            host_group_name = hostgroup_data['Host-group'][0]
-            hostgroups_by_name[host_group_name] = hostgroup_data
-        except KeyError:
-            continue
-    return hostgroups_by_name
 
 def _all_hosts():
     public_hosts = ipa_utils.ipa_find('host-find')
@@ -173,7 +134,7 @@ def _modify_ip(argument, new_ip):
     all_hosts = _all_hosts()
     for host_data in all_hosts:
         #TODO check this can't cause conflicts, can two hosts have the same server name?
-        # this or stmt is neccessary as modify can be called with either qualified or unqualified host name as it's argument
+        # this or stmt is neccessary as modify can be called with either qualified or unqualified host name as its argument
         if host_data['serverhostname'][0] == argument or host_data['Host name'][0] == argument:
             host = host_data
             break
