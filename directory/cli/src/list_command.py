@@ -70,9 +70,7 @@ def do(
 ):
     if not all([ipa_find_command, field_configs]):
         raise TypeError
-
     item_dicts = ipa_utils.ipa_find(ipa_find_command, ipa_find_args)
-
     # Remove blacklisted items
     if blacklist_key:
         item_dicts = [item_dict for item_dict in item_dicts if item_dict[blacklist_key][0] not in blacklist_val_array]
@@ -113,11 +111,7 @@ def _create_row(item_dict, field_configs, additional_data):
 def _display_value_for(item_dict, field_config, additional_data):
     name, generator = field_config
     value = generator(name, item_dict, additional_data)
-    # as ips are recieved individually & just as strings
-    if name == 'ip-address':
-        return value
-    else:
-        return '\n'.join(value)
+    return '\n'.join(value)
 
 
 # Field generators.
@@ -134,7 +128,7 @@ def field_with_name(name):
 
 def group_with_users_gid(field_name, item_dict, additional_data):
     group_name = ""
-    #the user's primary group's gid is set by looking at the dict for that user
+    #the user's primary group is found by getting their GID from the dict for that user
     user_gid = item_dict['GID'][0]
     groups_by_gid = additional_data['groups']
     try:
@@ -149,6 +143,6 @@ def group_with_users_gid(field_name, item_dict, additional_data):
 
 def host_with_ip(field_name, item_dict, additional_data):
     try:
-        return socket.gethostbyname(item_dict['Host name'][0])
-    except socket.gaierror:
-        return None
+        return [socket.gethostbyname(item_dict['Host name'][0])]
+    except (socket.gaierror, socket.herror):
+        return [None]
