@@ -41,8 +41,8 @@ def add_commands(directory):
             ipa_find_command='host-find',
 	    field_configs=HOST_LIST_FIELD_CONFIGS,
 	    sort_key='Host name',
-	    blacklist_key='Host name',
-	    blacklist_val_array=_expand_host_blacklist(),
+	    blacklist_key='serverhostname',
+	    blacklist_val_array=HOST_BLACKLIST,
 	)
 
     @host.command(help='Show detailed information on a host')
@@ -160,11 +160,3 @@ def _validate_blacklist_hosts(argument, options={}):
     if argument in HOST_BLACKLIST:
         error = "The host " + argument + " is a restricted host"
         raise click.ClickException(error)
-
-def _expand_host_blacklist():
-    _modified_host_blacklist = HOST_BLACKLIST
-    all_hosts =  _all_hosts()
-    for host_data in all_hosts:
-        if host_data['serverhostname'][0] in _modified_host_blacklist:
-            _modified_host_blacklist= _modified_host_blacklist + [host_data['Host name'][0]]
-    return _modified_host_blacklist
