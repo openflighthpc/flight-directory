@@ -70,7 +70,9 @@ def do(
 ):
     if not all([ipa_find_command, field_configs]):
         raise TypeError
+
     item_dicts = ipa_utils.ipa_find(ipa_find_command, ipa_find_args)
+
     # Remove blacklisted items
     if blacklist_key:
         item_dicts = [item_dict for item_dict in item_dicts if item_dict[blacklist_key][0] not in blacklist_val_array]
