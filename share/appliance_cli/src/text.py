@@ -1,6 +1,6 @@
 
 import click
-from terminaltables import SingleTable
+from terminaltables import DoubleTable
 import textwrap
 
 
@@ -42,9 +42,9 @@ def display_table(headers, data):
     bolded_headers = [bold(header) for header in headers]
     table_data = [bolded_headers] + data
 
-    table = SingleTable(table_data)
+    table = DoubleTable(table_data)
     table.inner_row_border = True
-    click.echo(table.table)
+    click.echo_via_pager(table.table)
 
 
 def help_text_literal_paragraph(*parts):
