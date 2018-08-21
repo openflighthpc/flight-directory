@@ -28,6 +28,7 @@ USER_LIST_FIELD_CONFIGS = OrderedDict([
 USER_SHOW_FIELD_CONFIGS = USER_LIST_FIELD_CONFIGS.copy()
 USER_SHOW_FIELD_CONFIGS.update([
     ('Home directory', field_with_same_name),
+    ('GECOS', field_with_same_name),
     ('Login shell', field_with_same_name),
     ('Email address', field_with_same_name),
     ('Account disabled', field_with_same_name),
@@ -141,6 +142,8 @@ def _user_options(require_names=True):
         '--uid': {'help': 'User ID Number'},
         '--gidnumber': {'help': 'Group ID Number'},
         '--key': {'help': 'SSH public key'},
+        '--homedir': {'help': 'Home directory'},
+        '--gecos': {'help': 'GECOS field'},
     }
 
 
