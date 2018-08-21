@@ -63,7 +63,7 @@ def do(
         ipa_find_args=[],
         field_configs=None,
         sort_key=None,
-        generate_additional_data=lambda: {},
+        generate_additional_data=lambda item_dict=None: {},
         display=table_displayer,
         blacklist_key=None,
         blacklist_val_array=[]
@@ -89,7 +89,7 @@ def do(
         results_data = _create_data(
             item_dicts,
             field_configs,
-            generate_additional_data()
+            generate_additional_data(item_dict=item_dicts[0])
         )
         display(headers, results_data)
     else:
