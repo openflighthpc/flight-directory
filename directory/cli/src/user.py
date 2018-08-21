@@ -64,7 +64,7 @@ def add_commands(directory):
                 ipa_find_command='user-find',
                 ipa_find_args=user_find_args,
                 field_configs=USER_SHOW_FIELD_CONFIGS,
-                generate_additional_data=_additional_data_for_list,
+                generate_additional_data=_additional_data_for_show,
                 display=list_command.list_displayer
             )
         except IpaRunError:
@@ -104,8 +104,8 @@ def add_commands(directory):
     for command in wrapper_commands:
         user.add_command(command)
 
-
-def _additional_data_for_list():
+def _additional_data_for_list(item_dict=None):
+    del item_dict
     return {
         'groups': _groups_by_gid()
     }
@@ -123,7 +123,6 @@ def _groups_by_gid():
             continue
     return groups_by_gid
 
-
 def _all_groups():
     # Want to get all groups, normal/public and private; I would have thought
     # there would be a single `ipa` command that would give these but AFAICT it
@@ -132,6 +131,25 @@ def _all_groups():
     private_groups = ipa_utils.ipa_find('group-find', ['--private'])
     return public_groups + private_groups
 
+# split the additional data functions for list & show to save time
+# only returns 1 private group, for the GID of the specified user
+def _additional_data_for_show(item_dict):
+    gid = item_dict['GID'][0]
+    return {
+        'groups': {
+            gid : _users_primary_group(gid)[0]
+        }
+    }
+
+def _users_primary_group(gid):
+    group_find_args = ['--gid={}'.format(gid)]
+    # will only find max one group between the two calls
+    # if the first doesn't find the group it will error but continue due to `error_allowed`
+    # if neither find it (i.e. if the GID is invalid) [{}] will be returned
+    primary_group = ipa_utils.ipa_find('group-find', group_find_args + ['--private'], error_allowed='0 groups matched')
+    if primary_group == [{}]:
+        primary_group = ipa_utils.ipa_find('group-find', group_find_args, error_allowed='0 groups matched')
+    return primary_group
 
 def _user_options(require_names=True):
     return {
