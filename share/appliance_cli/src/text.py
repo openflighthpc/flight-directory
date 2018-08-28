@@ -2,7 +2,7 @@
 import click
 from terminaltables import DoubleTable
 import textwrap
-
+import subprocess
 
 def line_wrap(text):
     return textwrap.fill(
@@ -42,10 +42,19 @@ def display_table(headers, data):
     bolded_headers = [bold(header) for header in headers]
     table_data = [bolded_headers] + data
 
+    # Issue with less displaying SingleTable so double is needed, appears NOT to be a unicode issue
+    # TODO sort this ^
     table = DoubleTable(table_data)
     table.inner_row_border = True
     click.echo_via_pager(table.table)
 
+    # Wanted to invoke less manually so could exit if less than one screen was to be displayed
+    # however there's a max length of cmd passable to Popen on the bash side of things
+    # (128kbs I think) and the table often exceeds that
+    #echoed_table = subprocess.Popen(("echo", table.table), stdout=subprocess.PIPE)
+    #subprocess.run(["less", "-R", "-F"], stdin=echoed_table.stdout)
+    #echoed_table.stdout.close()
+    #echoed_table.wait()
 
 def help_text_literal_paragraph(*parts):
     """Get text as a paragraph which will have indentation preserved in help"""
