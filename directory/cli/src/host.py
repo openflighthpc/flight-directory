@@ -84,9 +84,8 @@ def add_commands(directory):
 	    'delete',
 	    ipa_command='host-del',
 	    argument_name='hostname',
-            options=_delete_options(),
             transform_options_callback=_transform_delete_options,
-            help='Delete existing host'
+            help='Delete existing host and its dns records'
         )]
 	
     for command in wrapper_commands:
@@ -105,14 +104,6 @@ def _host_options():
     return {
         '--password': {'help': 'Host password'},
 	'--ip-address': {'help': 'IP address of host'},
-    }
-
-def _delete_options():
-    return {
-        '--remove-dns': {
-            'help': 'Remove A, AAAA, SSHFP and PTR records of the host',
-            'is_flag': True
-        }
     }
 
 def _transform_create_options(argument, options):
@@ -151,7 +142,7 @@ def _modify_ip(argument, new_ip):
 def _transform_delete_options(argument, options):
     _validate_blacklist_hosts(argument)
     return OptionTransformer(argument, options).\
-        rename_flag_option('remove_dns', 'updatedns').\
+        set_option('updatedns').\
         options
 
 def _validate_blacklist_hosts(argument, options={}):
