@@ -110,6 +110,7 @@ def add_commands(directory):
             'delete',
             ipa_command='user-del',
             argument_name='login',
+            transform_options_callback=_transform_options,
             handle_result_callback=_handle_delete_result,
             help='Delete a user',
         )
@@ -243,6 +244,7 @@ def _validate_blacklist_users(argument, options={}):
 
 
 def _transform_modify_options(argument, options):
+    _validate_blacklist_users(argument)
     return OptionTransformer(argument, options).\
         rename_option('key', 'sshpubkey').\
         rename_flag_option('new_password', 'random').\
