@@ -4,46 +4,57 @@ DIRECTORY_CLI=bin/starter
 DIRECTORY_DIR=/opt/directory
 
 setup() {
-  source /opt/directory/etc/config && echo "$IPAPASSWORD" | kinit admin
+    source /opt/directory/etc/config && echo "$IPAPASSWORD" | kinit admin
 
-  touch "$DIRECTORY_DIR/log.csv"
-  mv "$DIRECTORY_DIR/log.csv"{,.bak}
+    touch "$DIRECTORY_DIR/record"
+    mv "$DIRECTORY_DIR/record"{,.bak}
 
-  # Ensure test hosts do not exist.
-  cleanup
+    domain_info="$(ipa realmdomains-show --raw)"
+    DOMAIN="$(get_host_field "$domain_info" 'associateddomain')"
+
+    # Ensure test hosts do not exist.
+    cleanup
 }
 
 teardown() {
     cleanup
-    mv "$DIRECTORY_DIR/log.csv"{,.bak}
+    mv "$DIRECTORY_DIR/record"{.bak,}
 }
 
 cleanup() {
-    delete_host Jeeves
-    delete_host Alfred
+    delete_host 'jeeves.'$DOMAIN
+    delete_host 'alfred.'$DOMAIN
 }
 
 delete_host() {
-  local login
+    local name
 
-  login = "$1"
+    name="$1"
 
-  ipa host-del "$login" --continue
+    ipa host-del "$name" --updatedns --continue
+}
+
+delete_reverse_record() {
+    local ip
+
+    ip="$1"
+    
+    ipa dnsrecord-del 10.10.in-addr.arpa "$ip" --del-all
 }
 
 create_host_one() {
-    create_host Jeeves 1.1.1.1
+    create_host jeeves.$DOMAIN 10.10.255.254
 }
 
 create_host_two() {
-    create_host Alfred 2.2.2.2
+    create_host alfred.$DOMAIN 10.10.255.255
 }
 
 create_host() {
     local host ip
 
-    host = "$1"
-    ip = "$2"
+    host="$1"
+    ip="$2"
 
     ipa host-add "$host" --ip-address "$ip"
 }
@@ -54,54 +65,51 @@ create_host() {
     create_host_one
     create_host_two
 
-    output="$("$DIRECTORY_CLI" user list)"
-    echo "$output" | grep 'Jeeves.*1.1.1.1'
-    echo "$output" | grep 'Alfred.*2.2.2.2'
+    output="$("$DIRECTORY_CLI" host list)"
+    echo "$output" | grep 'jeeves.'
+    echo "$output" | grep 'alfred.'
 }
 
 @test '`directory host create` creates a host with given parameters' {
     local host_info ip
 
-    "$DIRECTORY_CLI" host create Jeeves --ip-address 1.1.1.1
+    "$DIRECTORY_CLI" host create jeeves.$DOMAIN --ip-address 10.10.255.254
 
-    host_info="$(ipa host-find Jeeves --raw)"
-    #come back to this
+    host_info="$(ipa host-find jeeves --raw --all)"
+    hostname="$(get_host_field "$host_info" 'serverHostName')"
+
+    [ "$hostname" = jeeves ]
 }
 
-@test '`directory host modify` modifies a host\'s ip' {
-  local _info first last full_name display_name
+@test '`directory host modify` modifies a host ip' {
+    local _info first last full_name display_name
 
-  create_host_one
+    create_host_one
 
-  "$DIRECTORY_CLI"  modify Jeeves --ip-address 3.3.3.3
+    "$DIRECTORY_CLI" host modify jeeves --ip-address 10.10.255.253
 
-  host_dns_info="$(ipa dnsrecord-find *DOMAIN NAME* --name=Jeeves --all)"
+    host_dns_info="$(ipa dnsrecord-find "$DOMAIN" --name=jeeves --all --raw)"
+    ip="$(get_host_field "$host_dns_info" 'arecord')"
 
+    #appears to be needed as the modify ip above stops the reverse record being deleted properly
+    ipa dnsrecord-del 10.10.in-addr.arpa 254.255 --del-all
+
+    [ "$ip" = 10.10.255.253 ]
 }
 
 @test '`directory host delete` deletes given host' {
   create_host_one
 
-  "$DIRECTORY_CLI" user delete Jeeves
+  "$DIRECTORY_CLI" host delete jeeves
 
-  run ipa user-find --'Host name'=Jeeves
-  [ ! "$status" -eq 0 ]
+  run ipa user-find --'Host name'=jeeves
+  [ ! "$status" -eq 0 ] 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+get_host_field() {
+    local raw_host_info raw_field_name fields_to_get
+    raw_host_info="$1"
+    raw_field_name="$2"
+    fields_to_get="${3:-2}"
+    echo "$raw_host_info" | grep "${raw_field_name}:" | xargs | cut -d ' ' -f "$fields_to_get"
+}
