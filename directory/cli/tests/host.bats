@@ -9,6 +9,9 @@ setup() {
     touch "$DIRECTORY_DIR/record"
     mv "$DIRECTORY_DIR/record"{,.bak}
 
+    touch "$DIRECTORY_DIR/log.csv"
+    mv "$DIRECTORY_DIR/log.csv"{,.bak}
+
     domain_info="$(ipa realmdomains-show --raw)"
     DOMAIN="$(get_host_field "$domain_info" 'associateddomain')"
 
@@ -18,7 +21,9 @@ setup() {
 
 teardown() {
     cleanup
+
     mv "$DIRECTORY_DIR/record"{.bak,}
+    mv "$DIRECTORY_DIR/log.csv"{.bak,}
 }
 
 cleanup() {

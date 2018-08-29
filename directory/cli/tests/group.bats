@@ -26,6 +26,9 @@ setup() {
   touch "$DIRECTORY_DIR/record"
   mv "$DIRECTORY_DIR/record"{,.bak}
 
+  touch "$DIRECTORY_DIR/log.csv"
+  mv "$DIRECTORY_DIR/log.csv"{,.bak}
+
   # Ensure test data does not exist.
   cleanup
 }
@@ -109,7 +112,9 @@ setup() {
 
 teardown() {
   cleanup
+
   mv "$DIRECTORY_DIR/record"{.bak,}
+  mv "$DIRECTORY_DIR/log.csv"{.bak,}
 }
 
 create_flintstones_group() {
