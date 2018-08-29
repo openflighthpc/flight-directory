@@ -33,7 +33,6 @@ cleanup() {
 
 delete_host() {
     local name
-
     name="$1"
 
     ipa host-del "$name" --updatedns --continue
@@ -41,9 +40,8 @@ delete_host() {
 
 delete_reverse_record() {
     local ip
-
     ip="$1"
-    
+
     ipa dnsrecord-del 10.10.in-addr.arpa "$ip" --del-all
 }
 
@@ -57,7 +55,6 @@ create_alfred_host() {
 
 create_host() {
     local host ip
-
     host="$1"
     ip="$2"
 
@@ -108,7 +105,7 @@ create_host() {
   "$DIRECTORY_CLI" host delete jeeves
 
   run ipa user-find --'Host name'=jeeves
-  [ ! "$status" -eq 0 ] 
+  [ ! "$status" -eq 0 ]
 }
 
 get_host_field() {

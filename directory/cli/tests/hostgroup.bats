@@ -11,7 +11,7 @@ delete_host() {
     local name
     name="$1"
 
-    ipa host-del "$name" --updatedns --continue  
+    ipa host-del "$name" --updatedns --continue
 }
 
 cleanup() {
@@ -59,7 +59,7 @@ setup() {
 }
 
 @test '`directory hostgroup modify` modifies a hostgroup with given parameters' {
-    local group_info name description 
+    local group_info name description
 
     create_butlers_group
 
@@ -75,14 +75,14 @@ setup() {
     create_butlers_group
 
     "$DIRECTORY_CLI" hostgroup delete butlers
-    
+
     run ipa hostgroup-find --hostgroup-name=butlers
 
     [ ! "$status" -eq 0 ]
 }
 
 @test '`directory hostgroup add-member` adds given host(s) to a hostgroup' {
-    local group_info 
+    local group_info
 
     create_butlers_group
     create_jeeves_host
@@ -96,8 +96,8 @@ setup() {
 }
 
 @test '`directory hostgroup remove-member` removes given host(s) from a hostgroup' {
-    local group_info 
-   
+    local group_info
+
     create_butlers_group
     create_jeeves_host
     create_alfred_host

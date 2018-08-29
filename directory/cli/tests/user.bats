@@ -75,7 +75,7 @@ setup() {
 }
 
 @test '`directory user disable` disables given user' {
-  create_fred_user 
+  create_fred_user
 
   "$DIRECTORY_CLI" user disable fred
 
