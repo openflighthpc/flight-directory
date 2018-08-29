@@ -42,11 +42,11 @@ delete_reverse_record() {
     ipa dnsrecord-del 10.10.in-addr.arpa "$ip" --del-all
 }
 
-create_host_one() {
+create_jeeves_host() {
     create_host jeeves.$DOMAIN 10.10.255.254
 }
 
-create_host_two() {
+create_alfred_host() {
     create_host alfred.$DOMAIN 10.10.255.255
 }
 
@@ -62,8 +62,8 @@ create_host() {
 @test '`directory host list` lists all hosts in a table' {
     local output
 
-    create_host_one
-    create_host_two
+    create_jeeves_host
+    create_alfred_host
 
     output="$("$DIRECTORY_CLI" host list)"
     echo "$output" | grep 'jeeves.'
@@ -84,7 +84,7 @@ create_host() {
 @test '`directory host modify` modifies a host ip' {
     local _info first last full_name display_name
 
-    create_host_one
+    create_jeeves_host
 
     "$DIRECTORY_CLI" host modify jeeves --ip-address 10.10.255.253
 
@@ -98,7 +98,7 @@ create_host() {
 }
 
 @test '`directory host delete` deletes given host' {
-  create_host_one
+  create_jeeves_host
 
   "$DIRECTORY_CLI" host delete jeeves
 
