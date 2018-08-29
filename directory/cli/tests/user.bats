@@ -71,6 +71,32 @@ setup() {
   [ "$display_name" =  'Barney Rubble' ]
 }
 
+@test '`directory user disable` disables given user' {
+  create_fred_user 
+
+  "$DIRECTORY_CLI" user disable fred
+
+  user_info="$(ipa user-find fred --raw --all)"
+  disabled="$(get_user_field "$user_info" 'nsaccountlock')"
+
+  [ "$disabled" = TRUE ]
+
+}
+
+@test '`directory user enable` enables given user' {
+  create_fred_user
+
+  ipa user-disable fred
+  "$DIRECTORY_CLI" user enable fred
+
+  user_info="$(ipa user-find fred --raw --all)"
+  disabled="$(get_user_field "$user_info" 'nsaccountlock')"
+
+  [ "$disabled" = FALSE ]
+
+}
+
+
 @test '`directory user delete` deletes given user' {
   create_fred_user
 
