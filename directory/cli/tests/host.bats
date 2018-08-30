@@ -88,7 +88,7 @@ create_host() {
 
     create_jeeves_host
 
-    "$DIRECTORY_CLI" host modify jeeves --ip-address 10.10.255.253
+    "$DIRECTORY_CLI" host modify jeeves.$DOMAIN --ip-address 10.10.255.253
 
     host_dns_info="$(ipa dnsrecord-find "$DOMAIN" --name=jeeves --all --raw)"
     ip="$(get_host_field "$host_dns_info" 'arecord')"
