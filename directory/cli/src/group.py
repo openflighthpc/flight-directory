@@ -140,7 +140,7 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
         raise click.ClickException(error)
 
     # the other errors are non-castrophic, the command still goes through
-    error = "Non-fatal " + error
+    error = "Non-fatal " + error.lower()
     # next checking if each user in users exists
     user_not_found = None
     for user in users:

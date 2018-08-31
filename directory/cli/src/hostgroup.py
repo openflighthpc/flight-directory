@@ -139,7 +139,7 @@ def _diagnose_member_command_error(hostgroup_name, hosts, add_command=False):
         raise click.ClickException(error)
 
     # the other errors are non-castrophic
-    error = "Non-fatal " + error
+    error = "Non-fatal " + error.lower()
     # next checking if each host in hosts exists
     all_hosts = ipa_utils.ipa_find('host-find')
     for host in hosts:
