@@ -1,6 +1,7 @@
 
 import click
 import ipa_utils
+import utils
 
 
 # TODO: consider using new wrapper_command stuff for this has been written; is
@@ -74,6 +75,7 @@ def _create_ipa_wrapper(
         if not (ipa_command == "host-mod" and len(args) == 1): 
             result = ipa_utils.ipa_run(ipa_command, args)
             handle_result_callback(argument, options, result)
+            utils.display_success()
 
     return ipa_wrapper
 

@@ -6,6 +6,7 @@ import list_command
 from list_command import field_with_same_name
 import ipa_wrapper_command
 import ipa_utils
+import utils
 from exceptions import IpaRunError
 
 
@@ -71,6 +72,7 @@ def add_commands(directory):
         args = [group_name] + user_options
         try:
             ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+            utils.display_success()
         except IpaRunError:
             _diagnose_member_command_error(group_name, users, add_command=True)
 
@@ -84,6 +86,7 @@ def add_commands(directory):
         args = [group_name] + user_options
         try:
             ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+            utils.display_success()
         except IpaRunError:
             _diagnose_member_command_error(group_name, users, add_command=False)
 

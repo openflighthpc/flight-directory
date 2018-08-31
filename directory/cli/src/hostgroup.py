@@ -5,8 +5,10 @@ import list_command
 from list_command import field_with_same_name    	
 import ipa_wrapper_command
 import ipa_utils
+import utils
 from exceptions import IpaRunError
 from option_transformer import OptionTransformer
+
 
 HOSTGROUP_LIST_FIELD_CONFIGS = OrderedDict([
     ('Host-group', field_with_same_name),
@@ -67,6 +69,7 @@ def add_commands(directory):
         args = [hostgroup_name] + host_options
         try:
             ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+            utils.display_success()
         except IpaRunError:
             _diagnose_member_command_error(hostgroup_name, hosts, add_command=True)
 
@@ -80,6 +83,7 @@ def add_commands(directory):
         args = [hostgroup_name] + host_options
         try:
             ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+            utils.display_success()
         except IpaRunError:
             _diagnose_member_command_error(hostgroup_name, hosts, add_command=False)
 
