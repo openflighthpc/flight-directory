@@ -135,18 +135,15 @@ def _diagnose_member_command_error(hostgroup_name, hosts, add_command=False):
         error = "Hostgroup-remove error: "
 
     # first checking if hostgroup exists
-    all_hostgroups = ipa_utils.ipa_find('hostgroup-find')
-    group_found = False
-    for hostgroup in all_hostgroups:
-        if hostgroup['Host-group'][0] == hostgroup_name:
-            group_found = True
-            break
-    if not group_found:
+    try:
+        hostgroup_find_args = ['--hostgroup_name={}'.format(hostgroup_name)]
+        hostgroups_found = ipa_utils.ipa_find('hostgroup-find', hostgroup_find_args)
+    except IpaRunError:
         error = error + '{} - hostgroup not found'.format(hostgroup_name)
         raise click.ClickException(error)
 
     # the other errors are non-castrophic
-    error = "Non-fatal " + error
+    error = "Non-fatal " + error.lower()
     # next checking if each host in hosts exists
     all_hosts = ipa_utils.ipa_find('host-find')
     for host in hosts:
