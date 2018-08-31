@@ -124,6 +124,7 @@ def _validate_blacklist_groups(argument, options={}):
     return options
 
 
+#add-member & remove-member commands were erroring silently so this method was needed
 def _diagnose_member_command_error(group_name, users, add_command=False):
     if add_command:
         error = "Group-add error: "
@@ -153,10 +154,20 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
         error = error + '{} - user not found'.format(user_not_found)
         raise click.ClickException(error)
 
-    # then report that a user was likely already in/not in the group
-    if add_command:
-        error = error + "Were one or more of the users already in the group?"
-        raise click.ClickException(error)
-    else:
-        error = error + "Were one or more of the users not in the group?"
-        raise click.ClickException(error)
+    #check if the any of the users already are/aren't in the group
+    for user in users:
+        try:
+            group_find_args = ['--group-name={}'.format(group_name), '--users={}'.format(user)]
+            groups_found = ipa_utils.ipa_find('group-find', group_find_args)
+            #if the user's in the group the cmd's trying to add them to, that's an error
+            if add_command:
+                error = error + "User " + user + " already in the group"
+                raise click.ClickException(error)
+        except IpaRunError:
+            # if the user's not in the group & the cmd's is trying to remove them, that's an error
+            if not add_command:
+                error = error + "User " + user + " not in the group"
+                raise click.ClickException(error)
+
+    error = error + "Unknown error"
+    raise click.ClickException(error)
