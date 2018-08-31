@@ -100,6 +100,10 @@ def _all_hostgroups():
     public_hostgroups = ipa_utils.ipa_find('hostgroup-find')
     return public_hostgroups
 
+def _all_dns_zones():
+    dns_zones = ipa_utils.ipa_find('dnszone-find')
+    return dns_zones
+
 def _host_options():
     return {
         '--password': {'help': 'Host password'},
@@ -119,25 +123,27 @@ def _transform_modify_options(argument,options):
         del options['ip-address']
     return options
 
+
 def _modify_ip(argument, new_ip):
-    # it is required to find the host's domain name
-    host = {}
-    all_hosts = _all_hosts()
-    for host_data in all_hosts:
-        #TODO check this can't cause conflicts, can two hosts have the same server name?
-        # this or stmt is neccessary as modify can be called with either qualified or unqualified host name as its argument
-        if host_data['serverhostname'][0] == argument or host_data['Host name'][0] == argument:
-            host = host_data
-            break
-    if not host == {}:
-        host_name = host['Host name'][0]
-        domain_name = re.sub(r'^.*?\.',"",host_name)
-        host_label = re.sub(r'\..*$',"",host_name)
-        args = [domain_name, host_label , '--a-rec='+new_ip]
-        ipa_utils.ipa_run('dnsrecord-mod', args, record=True)
-    else:
-        error = "Host " + argument + " not found"
+    all_dns_zones = _all_dns_zones()
+
+    # to prevent possible ambiguity here I've elected to reject any host that isn't fully qualified
+    arg_zone = None
+    for zone in all_dns_zones:
+        zone_without_trailing_dot = re.sub(r'\.$','', zone['Zone name'][0])
+        # create regex string with end of line char at the end
+        zone_at_end = re.escape(zone_without_trailing_dot) + r'$'
+        if re.search(zone_at_end, argument, re.IGNORECASE):
+            arg_zone = zone_without_trailing_dot
+            zone_with_leading_dot = r'.' + re.escape(arg_zone)
+            arg_host_name = re.sub(zone_with_leading_dot,'',argument)
+
+    if arg_zone == None:
+        error = "Host " + argument + " not fully qualified"
         raise click.ClickException(error)
+    else:
+        args = [arg_zone, arg_host_name, '--a-rec='+new_ip]
+        ipa_utils.ipa_run('dnsrecord-mod', args, record=True)
 
 def _transform_delete_options(argument, options):
     _validate_blacklist_hosts(argument)
