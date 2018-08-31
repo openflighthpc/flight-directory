@@ -116,13 +116,14 @@ def add_commands(directory):
     for command in wrapper_commands:
         group.add_command(command)
 
+
 def _validate_blacklist_groups(argument, options={}):
     if argument in GROUP_BLACKLIST:
         error = "The group " + argument + " is a restricted group"
         raise click.ClickException(error)
     return options
 
-# this method can be computationally taxing, should be disabled if speed becomes an issue
+
 def _diagnose_member_command_error(group_name, users, add_command=False):
     if add_command:
         error = "Group-add error: "
@@ -130,29 +131,27 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
         error = "Group-remove error: "
 
     # first checking if group exists
-    all_groups = ipa_utils.ipa_find('group-find')
-    group_found = False
-    for group in all_groups:
-        if group['Group name'][0] == group_name:
-            group_found = True
-            break
-    if not group_found:
+    try:
+        group_find_args = ['--group-name={}'.format(group_name)]
+        groups_found = ipa_utils.ipa_find('group-find', group_find_args)
+    except IpaRunError:
         error = error + '{} - group not found'.format(group_name)
         raise click.ClickException(error)
 
-    # the other errors are non-castrophic
+    # the other errors are non-castrophic, the command still goes through
     error = "Non-fatal " + error
-    # next checking if each host in hosts exists
-    all_users = ipa_utils.ipa_find('user-find')
+    # next checking if each user in users exists
+    user_not_found = None
     for user in users:
-        user_found = False
-        for user_data in all_users:
-            if user_data['User login'][0] == user:
-                user_found = True
-                break
-        if not user_found:
-            error = error + '{} - user not found'.format(user)
-            raise click.ClickException(error)
+        try:
+            user_find_args = ['--login={}'.format(user)]
+            users_found = ipa_utils.ipa_find('user-find', user_find_args)
+        except IpaRunError:
+            user_not_found = user
+            break
+    if user_not_found:
+        error = error + '{} - user not found'.format(user_not_found)
+        raise click.ClickException(error)
 
     # then report that a user was likely already in/not in the group
     if add_command:
