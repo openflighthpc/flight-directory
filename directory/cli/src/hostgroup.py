@@ -36,6 +36,7 @@ def add_commands(directory):
     def list():
         list_command.do(
             ipa_find_command='hostgroup-find',
+            all_fields=False,
             field_configs=HOSTGROUP_LIST_FIELD_CONFIGS,
             sort_key='Host-group',
             blacklist_key='Host-group',
@@ -136,7 +137,7 @@ def _diagnose_member_command_error(hostgroup_name, hosts, add_command=False):
 
     # first checking if hostgroup exists
     try:
-        hostgroup_find_args = ['--hostgroup_name={}'.format(hostgroup_name)]
+        hostgroup_find_args = ['--hostgroup-name={}'.format(hostgroup_name)]
         hostgroups_found = ipa_utils.ipa_find('hostgroup-find', hostgroup_find_args)
     except IpaRunError:
         error = error + '{} - hostgroup not found'.format(hostgroup_name)
@@ -163,3 +164,6 @@ def _diagnose_member_command_error(hostgroup_name, hosts, add_command=False):
     else:
         error = error + "Were one or more of the hosts not in the group?"
         raise click.ClickException(error)
+
+    error = "Unknown Error"
+    raise click.ClickException(error)

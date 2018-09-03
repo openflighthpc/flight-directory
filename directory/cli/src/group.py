@@ -37,6 +37,7 @@ def add_commands(directory):
     def list():
         list_command.do(
             ipa_find_command='group-find',
+            all_fields=False,
             field_configs=GROUP_LIST_FIELD_CONFIGS,
             sort_key='Group name',
             blacklist_key='Group name',
@@ -137,7 +138,7 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
     # first checking if group exists
     try:
         group_find_args = ['--group-name={}'.format(group_name)]
-        groups_found = ipa_utils.ipa_find('group-find', group_find_args)
+        groups_found = ipa_utils.ipa_find('group-find', group_find_args, all_fields=False)
     except IpaRunError:
         error = error + '{} - group not found'.format(group_name)
         raise click.ClickException(error)
@@ -149,7 +150,7 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
     for user in users:
         try:
             user_find_args = ['--login={}'.format(user)]
-            users_found = ipa_utils.ipa_find('user-find', user_find_args)
+            users_found = ipa_utils.ipa_find('user-find', user_find_args, all_fields=False)
         except IpaRunError:
             user_not_found = user
             break
@@ -161,7 +162,7 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
     for user in users:
         try:
             group_find_args = ['--group-name={}'.format(group_name), '--users={}'.format(user)]
-            groups_found = ipa_utils.ipa_find('group-find', group_find_args)
+            groups_found = ipa_utils.ipa_find('group-find', group_find_args, all_fields=False)
             #if the user's in the group the cmd's trying to add them to, that's an error
             if add_command:
                 error = error + "User " + user + " already in the group"
@@ -172,5 +173,5 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
                 error = error + "User " + user + " not in the group"
                 raise click.ClickException(error)
 
-    error = error + "Unknown error"
+    error = "Unknown error"
     raise click.ClickException(error)
