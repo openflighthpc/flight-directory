@@ -142,8 +142,8 @@ def _all_groups():
     # Want to get all groups, normal/public and private; I would have thought
     # there would be a single `ipa` command that would give these but AFAICT it
     # can only be done using both of these.
-    public_groups = ipa_utils.ipa_find('group-find')
-    private_groups = ipa_utils.ipa_find('group-find', ['--private'])
+    public_groups = ipa_utils.ipa_find('group-find', all_fields=False)
+    private_groups = ipa_utils.ipa_find('group-find', ['--private'], all_fields=False)
     return public_groups + private_groups
 
 # split the additional data functions for list & show to save time

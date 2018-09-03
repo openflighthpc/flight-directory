@@ -61,6 +61,7 @@ def list_displayer(headers, data):
 def do(
         ipa_find_command=None,
         ipa_find_args=[],
+        all_fields=True,
         field_configs=None,
         sort_key=None,
         generate_additional_data=lambda item_dict=None: {},
@@ -71,7 +72,7 @@ def do(
     if not all([ipa_find_command, field_configs]):
         raise TypeError
 
-    item_dicts = ipa_utils.ipa_find(ipa_find_command, ipa_find_args)
+    item_dicts = ipa_utils.ipa_find(ipa_find_command, ipa_find_args, all_fields=all_fields)
 
     # Remove blacklisted items
     if blacklist_key:

@@ -91,17 +91,9 @@ def add_commands(directory):
     for command in wrapper_commands:
         host.add_command(command)
 
-def _all_hosts():
-    public_hosts = ipa_utils.ipa_find('host-find')
-    return public_hosts
-
-
-def _all_hostgroups():
-    public_hostgroups = ipa_utils.ipa_find('hostgroup-find')
-    return public_hostgroups
 
 def _all_dns_zones():
-    dns_zones = ipa_utils.ipa_find('dnszone-find')
+    dns_zones = ipa_utils.ipa_find('dnszone-find', all_fields=False)
     return dns_zones
 
 def _host_options():
@@ -119,12 +111,18 @@ def _transform_modify_options(argument,options):
     # ipa handles host ip addresses differently from other data so a conditional is
     #   neccessary for if a user's trying to modify a host's ip
     if not options['ip-address'] == None:
-        _modify_ip(argument, new_ip=options['ip-address'])
+        # need to determine if it's only address to be changed, and print success message if so
+        ip_only = True
+        for option, value in options.items():
+            if (option != 'ip-address' and value != None):
+                ip_only = False
+                break
+        _modify_ip(argument, new_ip=options['ip-address'], ip_only=ip_only)
         del options['ip-address']
     return options
 
 
-def _modify_ip(argument, new_ip):
+def _modify_ip(argument, new_ip, ip_only):
     all_dns_zones = _all_dns_zones()
 
     # to prevent possible ambiguity here I've elected to reject any host that isn't fully qualified
@@ -144,6 +142,8 @@ def _modify_ip(argument, new_ip):
     else:
         args = [arg_zone, arg_host_name, '--a-rec='+new_ip]
         ipa_utils.ipa_run('dnsrecord-mod', args, record=True)
+        if ip_only:
+            utils.display_success()
 
 def _transform_delete_options(argument, options):
     _validate_blacklist_hosts(argument)
