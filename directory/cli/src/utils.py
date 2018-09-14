@@ -1,6 +1,7 @@
 
 import click
 from click import ClickException
+from pathlib import Path
 import shlex
 
 from config import CONFIG
@@ -25,6 +26,25 @@ def directory_config():
             .format(CONFIG.APPLIANCE_CONFIG)
         )
 
+def get_user_config(conf_variable):
+    # only even try read it if file exists, to allow backwards compatability
+    if detect_user_config():
+        try:
+            return appliance_cli.utils.read_config(CONFIG.DIRECTORY_USER_CONFIG)[conf_variable]
+        except KeyError:
+            #if the specified variable isn't set we want to error silently & return None
+            #   for if that config field hasn't been set
+            return None
+        except PermissionError:
+            raise ClickException(
+                "Cannot read user config - you need read permissions for '{}'."
+                .format(CONFIG.DIRECTORY_USER_CONFIG)
+            )
+
+def detect_user_config():
+    user_config_file = Path(CONFIG.DIRECTORY_USER_CONFIG)
+    return user_config_file.is_file()
+    
 
 def original_command():
     return _meta()[CONFIG.ORIGINAL_COMMAND_META_KEY]
