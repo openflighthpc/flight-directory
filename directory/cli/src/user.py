@@ -181,13 +181,22 @@ def _user_options(require_names=True):
 
 
 def _create_options():
-    return {
-        **_user_options(),
-        '--no-password': {
-            'help': 'Do not generate temporary password',
-            'is_flag': True,
+    if utils.get_password_policy():
+        return {
+            **_user_options(),
+            '--make-password': {
+                'help': 'Generate a temporary password',
+                'is_flag': True,
+            },
         }
-    }
+    else:
+        return {
+            **_user_options(),
+            '--no-password': {
+                'help': 'Do not generate temporary password',
+                'is_flag': True,
+            },
+        }
 
 
 def _modify_options():
@@ -218,10 +227,16 @@ def _transform_create_options(argument, options):
     _validate_create_uid(options['uid'])
     if options['gidnumber'] == None and utils.detect_user_config():
         options['gidnumber'] = utils.get_user_config('DEFAULT_GID')
-    return OptionTransformer(argument, options).\
-        rename_and_invert_flag_option('no_password', 'random').\
-        rename_option('key', 'sshpubkey').\
-        options
+    if utils.get_password_policy():
+        return OptionTransformer(argument, options).\
+            rename_flag_option('make_password', 'random').\
+            rename_option('key', 'sshpubkey').\
+            options
+    else:
+        return OptionTransformer(argument, options).\
+            rename_and_invert_flag_option('no_password', 'random').\
+            rename_option('key', 'sshpubkey').\
+            options
 
 
 def _validate_create_uid(uid):

@@ -32,8 +32,8 @@ def get_user_config(conf_variable):
         try:
             return appliance_cli.utils.read_config(CONFIG.DIRECTORY_USER_CONFIG)[conf_variable]
         except KeyError:
-            #if the specified variable isn't set we want to error silently & return None
-            #   for if that config field hasn't been set
+            # if the specified config field hasn't been set/doesn't exist
+            #   we want to error silently & return None
             return None
         except PermissionError:
             raise ClickException(
@@ -45,6 +45,9 @@ def detect_user_config():
     user_config_file = Path(CONFIG.DIRECTORY_USER_CONFIG)
     return user_config_file.is_file()
 
+# return true if a password is not to be generated
+def get_password_policy():
+    return get_user_config('PASSWORD_POLICY') == 'DO_NOT_GENERATE'
 
 def original_command():
     return _meta()[CONFIG.ORIGINAL_COMMAND_META_KEY]
