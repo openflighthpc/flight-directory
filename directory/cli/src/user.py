@@ -216,6 +216,8 @@ def _transform_options(argument, options):
 def _transform_create_options(argument, options):
     _validate_blacklist_users(argument)
     _validate_create_uid(options['uid'])
+    if options['gidnumber'] == None and utils.detect_user_config():
+        options['gidnumber'] = utils.get_user_config('DEFAULT_GID')
     return OptionTransformer(argument, options).\
         rename_and_invert_flag_option('no_password', 'random').\
         rename_option('key', 'sshpubkey').\

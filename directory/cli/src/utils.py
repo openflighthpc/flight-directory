@@ -37,14 +37,14 @@ def get_user_config(conf_variable):
             return None
         except PermissionError:
             raise ClickException(
-                "Cannot read user config - you need read permissions for '{}'."
+                "Cannot read user config - you need permissions to read '{}'."
                 .format(CONFIG.DIRECTORY_USER_CONFIG)
             )
 
 def detect_user_config():
     user_config_file = Path(CONFIG.DIRECTORY_USER_CONFIG)
     return user_config_file.is_file()
-    
+
 
 def original_command():
     return _meta()[CONFIG.ORIGINAL_COMMAND_META_KEY]
