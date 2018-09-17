@@ -81,7 +81,7 @@ def _create_ipa_wrapper(
                 or not os.access(utils.get_user_config('POST_CREATE_SCRIPT'), os.X_OK))\
             ):
                 raise click.ClickException(
-                    "User create script unavailable - you need permissions to execute '{}'."
+                    "User create script unavailable - you need permissions to execute '{}' or alter your user config."
                     .format(utils.get_user_config('POST_CREATE_SCRIPT')
                 ))
             result = ipa_utils.ipa_run(ipa_command, args)
