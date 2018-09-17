@@ -346,14 +346,14 @@ def _handle_create_result(login, options, result):
     script_location = utils.get_user_config('POST_CREATE_SCRIPT')
     if script_location:
         try:
-            result = subprocess.run([script_location, login], check=True)
+            script_result = subprocess.run([script_location, login], check=True)
         except PermissionError:
             raise click.ClickException(
                 "Cannot execute post user creation script - you need permissions to execute '{}'."
                 .format(script_location)
             )
         except subprocess.CalledProcessError as ex:
-            error = result.stdout if error_in_stdout else result.stderr
+            error = script_result.stdout if error_in_stdout else script_result.stderr
             raise IpaRunError(error) from ex
     _handle_new_temporary_password(login, options, result)
 
