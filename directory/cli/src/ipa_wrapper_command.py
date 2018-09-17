@@ -74,8 +74,8 @@ def _create_ipa_wrapper(
         #   in a spurious error message if the --ip-address option has been removed in transform_options_callback
         if not (ipa_command == "host-mod" and len(args) == 1): 
             result = ipa_utils.ipa_run(ipa_command, args)
-            handle_result_callback(argument, options, result)
             utils.display_success()
+            handle_result_callback(argument, options, result)
 
     return ipa_wrapper
 
