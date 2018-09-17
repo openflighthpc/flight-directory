@@ -12,6 +12,7 @@ import ipa_utils
 import appliance_cli.text as text
 import appliance_cli.utils
 import utils
+import subprocess
 from exceptions import IpaRunError
 from option_transformer import OptionTransformer
 
@@ -342,6 +343,18 @@ def _extra_name_options(first_name, last_name):
 
 
 def _handle_create_result(login, options, result):
+    script_location = utils.get_user_config('POST_CREATE_SCRIPT')
+    if script_location:
+        try:
+            subprocess.run([script_location, login], check=True)
+        except PermissionError:
+            raise click.ClickException(
+                "Cannot execute post user creation script - you need permissions to execute '{}'."
+                .format(script_location)
+            )
+        except subprocess.CalledProcessError as ex:
+            error = result.stdout if error_in_stdout else result.stderr
+            raise IpaRunError(error) from ex
     _handle_new_temporary_password(login, options, result)
 
 
