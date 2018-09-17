@@ -47,7 +47,7 @@ def detect_user_config():
 
 # return true if a password is not to be generated
 def get_password_policy():
-    return get_user_config('PASSWORD_POLICY') == 'DO_NOT_GENERATE'
+    return get_user_config('DO_NOT_GENERATE_PASSWORD') == 'TRUE'
 
 def original_command():
     return _meta()[CONFIG.ORIGINAL_COMMAND_META_KEY]
