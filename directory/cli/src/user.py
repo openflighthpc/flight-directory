@@ -346,7 +346,7 @@ def _handle_create_result(login, options, result):
     script_location = utils.get_user_config('POST_CREATE_SCRIPT')
     if script_location:
         try:
-            subprocess.run([script_location, login], check=True)
+            result = subprocess.run([script_location, login], check=True)
         except PermissionError:
             raise click.ClickException(
                 "Cannot execute post user creation script - you need permissions to execute '{}'."
