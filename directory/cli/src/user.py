@@ -12,6 +12,7 @@ import ipa_utils
 import appliance_cli.text as text
 import appliance_cli.utils
 import utils
+import subprocess
 from exceptions import IpaRunError
 from option_transformer import OptionTransformer
 
@@ -181,13 +182,22 @@ def _user_options(require_names=True):
 
 
 def _create_options():
-    return {
-        **_user_options(),
-        '--no-password': {
-            'help': 'Do not generate temporary password',
-            'is_flag': True,
+    if utils.get_password_policy():
+        return {
+            **_user_options(),
+            '--make-password': {
+                'help': 'Generate a temporary password',
+                'is_flag': True,
+            },
         }
-    }
+    else:
+        return {
+            **_user_options(),
+            '--no-password': {
+                'help': 'Do not generate temporary password',
+                'is_flag': True,
+            },
+        }
 
 
 def _modify_options():
@@ -216,10 +226,18 @@ def _transform_options(argument, options):
 def _transform_create_options(argument, options):
     _validate_blacklist_users(argument)
     _validate_create_uid(options['uid'])
-    return OptionTransformer(argument, options).\
-        rename_and_invert_flag_option('no_password', 'random').\
-        rename_option('key', 'sshpubkey').\
-        options
+    if options['gidnumber'] == None and utils.detect_user_config():
+        options['gidnumber'] = utils.get_user_config('DEFAULT_GID')
+    if utils.get_password_policy():
+        return OptionTransformer(argument, options).\
+            rename_flag_option('make_password', 'random').\
+            rename_option('key', 'sshpubkey').\
+            options
+    else:
+        return OptionTransformer(argument, options).\
+            rename_and_invert_flag_option('no_password', 'random').\
+            rename_option('key', 'sshpubkey').\
+            options
 
 
 def _validate_create_uid(uid):
@@ -325,6 +343,7 @@ def _extra_name_options(first_name, last_name):
 
 
 def _handle_create_result(login, options, result):
+    _run_post_create_script(login)
     _handle_new_temporary_password(login, options, result)
 
 
@@ -361,3 +380,23 @@ def _handle_new_temporary_password(login, options, result):
 def _handle_removed_password(login, options, result):
     if utils.currently_importing():
         utils.remove_imported_user_entry(login)
+
+def _run_post_create_script(login):
+    script_location = utils.get_user_config('POST_CREATE_SCRIPT')
+
+    if script_location:
+        try:
+            script_result = subprocess.run([script_location, login], check=True)
+        except PermissionError:
+            raise click.ClickException(
+                "Cannot execute post user creation script - you need permissions to execute '{}'."
+                .format(script_location)
+            )
+        except OSError:
+            raise click.ClickException(
+                "Userware is unable to execute the script at '{}' ".format(script_location) + \
+                "- please check the script exists and that it has a shebang line at its start"
+            )
+        except subprocess.CalledProcessError as ex:
+            error = script_result.stdout if error_in_stdout else script_result.stderr
+            raise IpaRunError(error) from ex
