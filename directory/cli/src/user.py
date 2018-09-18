@@ -12,6 +12,7 @@ import ipa_utils
 import appliance_cli.text as text
 import appliance_cli.utils
 import utils
+import subprocess
 from exceptions import IpaRunError
 from option_transformer import OptionTransformer
 
@@ -28,6 +29,7 @@ USER_LIST_FIELD_CONFIGS = OrderedDict([
 USER_SHOW_FIELD_CONFIGS = USER_LIST_FIELD_CONFIGS.copy()
 USER_SHOW_FIELD_CONFIGS.update([
     ('Home directory', field_with_same_name),
+    ('GECOS', field_with_same_name),
     ('Login shell', field_with_same_name),
     ('Email address', field_with_same_name),
     ('Account disabled', field_with_same_name),
@@ -63,7 +65,7 @@ def add_commands(directory):
                 ipa_find_command='user-find',
                 ipa_find_args=user_find_args,
                 field_configs=USER_SHOW_FIELD_CONFIGS,
-                generate_additional_data=_additional_data_for_list,
+                generate_additional_data=_additional_data_for_show,
                 display=list_command.list_displayer
             )
         except IpaRunError:
@@ -92,9 +94,24 @@ def add_commands(directory):
             help='Modify an existing user',
         ),
         ipa_wrapper_command.create(
+            'enable',
+            ipa_command='user-enable',
+            argument_name='login',
+            transform_options_callback=_transform_options,
+            help='Enable a user',
+        ),
+        ipa_wrapper_command.create(
+            'disable',
+            ipa_command='user-disable',
+            argument_name='login',
+            transform_options_callback=_transform_options,
+            help='Disable a user',
+        ),
+        ipa_wrapper_command.create(
             'delete',
             ipa_command='user-del',
             argument_name='login',
+            transform_options_callback=_transform_options,
             handle_result_callback=_handle_delete_result,
             help='Delete a user',
         )
@@ -103,8 +120,8 @@ def add_commands(directory):
     for command in wrapper_commands:
         user.add_command(command)
 
-
-def _additional_data_for_list():
+def _additional_data_for_list(item_dict=None):
+    del item_dict
     return {
         'groups': _groups_by_gid()
     }
@@ -122,15 +139,33 @@ def _groups_by_gid():
             continue
     return groups_by_gid
 
-
 def _all_groups():
     # Want to get all groups, normal/public and private; I would have thought
     # there would be a single `ipa` command that would give these but AFAICT it
     # can only be done using both of these.
-    public_groups = ipa_utils.ipa_find('group-find')
-    private_groups = ipa_utils.ipa_find('group-find', ['--private'])
+    public_groups = ipa_utils.ipa_find('group-find', all_fields=False)
+    private_groups = ipa_utils.ipa_find('group-find', ['--private'], all_fields=False)
     return public_groups + private_groups
 
+# split the additional data functions for list & show to save time
+# only returns 1 private group, for the GID of the specified user
+def _additional_data_for_show(item_dict):
+    gid = item_dict['GID'][0]
+    return {
+        'groups': {
+            gid : _users_primary_group(gid)[0]
+        }
+    }
+
+def _users_primary_group(gid):
+    group_find_args = ['--gid={}'.format(gid)]
+    # will only find max one group between the two calls
+    # if the first doesn't find the group it will error but continue due to `error_allowed`
+    # if neither find it (i.e. if the GID is invalid) [{}] will be returned
+    primary_group = ipa_utils.ipa_find('group-find', group_find_args + ['--private'], error_allowed='0 groups matched')
+    if primary_group == [{}]:
+        primary_group = ipa_utils.ipa_find('group-find', group_find_args, error_allowed='0 groups matched')
+    return primary_group
 
 def _user_options(require_names=True):
     return {
@@ -141,17 +176,28 @@ def _user_options(require_names=True):
         '--uid': {'help': 'User ID Number'},
         '--gidnumber': {'help': 'Group ID Number'},
         '--key': {'help': 'SSH public key'},
+        '--homedir': {'help': 'Home directory'},
+        '--gecos': {'help': 'GECOS field'},
     }
 
 
 def _create_options():
-    return {
-        **_user_options(),
-        '--no-password': {
-            'help': 'Do not generate temporary password',
-            'is_flag': True,
+    if utils.get_password_policy():
+        return {
+            **_user_options(),
+            '--make-password': {
+                'help': 'Generate a temporary password',
+                'is_flag': True,
+            },
         }
-    }
+    else:
+        return {
+            **_user_options(),
+            '--no-password': {
+                'help': 'Do not generate temporary password',
+                'is_flag': True,
+            },
+        }
 
 
 def _modify_options():
@@ -172,13 +218,26 @@ def _modify_options():
     }
 
 
+def _transform_options(argument, options):
+    _validate_blacklist_users(argument)
+    return options
+
+
 def _transform_create_options(argument, options):
     _validate_blacklist_users(argument)
     _validate_create_uid(options['uid'])
-    return OptionTransformer(argument, options).\
-        rename_and_invert_flag_option('no_password', 'random').\
-        rename_option('key', 'sshpubkey').\
-        options
+    if options['gidnumber'] == None and utils.detect_user_config():
+        options['gidnumber'] = utils.get_user_config('DEFAULT_GID')
+    if utils.get_password_policy():
+        return OptionTransformer(argument, options).\
+            rename_flag_option('make_password', 'random').\
+            rename_option('key', 'sshpubkey').\
+            options
+    else:
+        return OptionTransformer(argument, options).\
+            rename_and_invert_flag_option('no_password', 'random').\
+            rename_option('key', 'sshpubkey').\
+            options
 
 
 def _validate_create_uid(uid):
@@ -203,6 +262,7 @@ def _validate_blacklist_users(argument, options={}):
 
 
 def _transform_modify_options(argument, options):
+    _validate_blacklist_users(argument)
     return OptionTransformer(argument, options).\
         rename_option('key', 'sshpubkey').\
         rename_flag_option('new_password', 'random').\
@@ -283,6 +343,7 @@ def _extra_name_options(first_name, last_name):
 
 
 def _handle_create_result(login, options, result):
+    _run_post_create_script(login)
     _handle_new_temporary_password(login, options, result)
 
 
@@ -319,3 +380,23 @@ def _handle_new_temporary_password(login, options, result):
 def _handle_removed_password(login, options, result):
     if utils.currently_importing():
         utils.remove_imported_user_entry(login)
+
+def _run_post_create_script(login):
+    script_location = utils.get_user_config('POST_CREATE_SCRIPT')
+
+    if script_location:
+        try:
+            script_result = subprocess.run([script_location, login], check=True)
+        except PermissionError:
+            raise click.ClickException(
+                "Cannot execute post user creation script - you need permissions to execute '{}'."
+                .format(script_location)
+            )
+        except OSError:
+            raise click.ClickException(
+                "Userware is unable to execute the script at '{}' ".format(script_location) + \
+                "- please check the script exists and that it has a shebang line at its start"
+            )
+        except subprocess.CalledProcessError as ex:
+            error = script_result.stdout if error_in_stdout else script_result.stderr
+            raise IpaRunError(error) from ex

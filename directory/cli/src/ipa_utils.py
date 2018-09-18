@@ -69,12 +69,13 @@ def _strip_all(strings):
     return [string.strip() for string in strings]
 
 
-def ipa_run(ipa_command, args=[], error_in_stdout=False, record=True):
+def ipa_run(ipa_command, args=[], error_allowed=None, error_in_stdout=False, record=True):
     command = ['ipa', '--no-prompt'] + [ipa_command] + args
 
     try:
         result = appliance_cli.utils.run(command)
-        result.check_returncode()
+        if (error_allowed == None or not error_allowed in result.stdout):
+            result.check_returncode()
     except subprocess.CalledProcessError as ex:
         error = result.stdout if error_in_stdout else result.stderr
         raise IpaRunError(error) from ex
@@ -94,13 +95,16 @@ def _record_command():
 # Wrapper around `ipa_run` for find commands, to always get all fields and
 # records, not record when we run the find command, and return the parsed
 # result.
-def ipa_find(ipa_find_command, additional_args=[]):
+def ipa_find(ipa_find_command, additional_args=[], error_allowed=None, all_fields=True):
     standard_args = [
-        '--all',
         # Effectively make find command show all data.
-        '--sizelimit', '1000000'
+        '--sizelimit', '0'
     ]
+
+    if all_fields:
+        standard_args = ['--all'] + standard_args
+
     args = additional_args + standard_args
 
-    ipa_result = ipa_run(ipa_find_command, args, record=False)
+    ipa_result = ipa_run(ipa_find_command, args, error_allowed, record=False)
     return parse_find_output(ipa_result)

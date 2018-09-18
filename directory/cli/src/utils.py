@@ -1,6 +1,7 @@
 
 import click
 from click import ClickException
+from pathlib import Path
 import shlex
 
 from config import CONFIG
@@ -25,6 +26,28 @@ def directory_config():
             .format(CONFIG.APPLIANCE_CONFIG)
         )
 
+def get_user_config(conf_variable):
+    # only even try read it if file exists, to allow backwards compatability
+    if detect_user_config():
+        try:
+            return appliance_cli.utils.read_config(CONFIG.DIRECTORY_USER_CONFIG)[conf_variable]
+        except KeyError:
+            # if the specified config field hasn't been set/doesn't exist
+            #   we want to error silently & return None
+            return None
+        except PermissionError:
+            raise ClickException(
+                "Cannot read user config - you need permissions to read '{}'."
+                .format(CONFIG.DIRECTORY_USER_CONFIG)
+            )
+
+def detect_user_config():
+    user_config_file = Path(CONFIG.DIRECTORY_USER_CONFIG)
+    return user_config_file.is_file()
+
+# return true if a password is not to be generated
+def get_password_policy():
+    return get_user_config('DO_NOT_GENERATE_PASSWORD') == 'TRUE'
 
 def original_command():
     return _meta()[CONFIG.ORIGINAL_COMMAND_META_KEY]
@@ -78,3 +101,8 @@ def directory_run(directory, command_string):
             parent=click.get_current_context()
     ) as context:
         directory.invoke(context)
+
+def display_success():
+    command_string = " ".join(original_command().split(" ")[:2])
+#    command_string = " ".join([word.capitalize() for word in command_string])
+    click.echo("------------- " + command_string + " successful -------------")

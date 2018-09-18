@@ -2,6 +2,7 @@
 import click
 from operator import itemgetter
 import re
+import socket
 
 import ipa_utils
 import appliance_cli.text as text
@@ -60,9 +61,10 @@ def list_displayer(headers, data):
 def do(
         ipa_find_command=None,
         ipa_find_args=[],
+        all_fields=True,
         field_configs=None,
         sort_key=None,
-        generate_additional_data=lambda: {},
+        generate_additional_data=lambda item_dict=None: {},
         display=table_displayer,
         blacklist_key=None,
         blacklist_val_array=[]
@@ -70,7 +72,7 @@ def do(
     if not all([ipa_find_command, field_configs]):
         raise TypeError
 
-    item_dicts = ipa_utils.ipa_find(ipa_find_command, ipa_find_args)
+    item_dicts = ipa_utils.ipa_find(ipa_find_command, ipa_find_args, all_fields=all_fields)
 
     # Remove blacklisted items
     if blacklist_key:
@@ -88,7 +90,7 @@ def do(
         results_data = _create_data(
             item_dicts,
             field_configs,
-            generate_additional_data()
+            generate_additional_data(item_dict=item_dicts[0])
         )
         display(headers, results_data)
     else:
@@ -112,11 +114,7 @@ def _create_row(item_dict, field_configs, additional_data):
 def _display_value_for(item_dict, field_config, additional_data):
     name, generator = field_config
     value = generator(name, item_dict, additional_data)
-    if name == 'ip-address':
-        value_concat = ''.join(value)
-        return re.sub(r', ',',\\n',value_concat)
-    else:
-        return '\n'.join(value)
+    return '\n'.join(value)
 
 
 # Field generators.
@@ -133,7 +131,7 @@ def field_with_name(name):
 
 def group_with_users_gid(field_name, item_dict, additional_data):
     group_name = ""
-    #the user's primary group's gid is set by looking at the dict for that user
+    #the user's primary group is found by getting their GID from the dict for that user
     user_gid = item_dict['GID'][0]
     groups_by_gid = additional_data['groups']
     try:
@@ -146,26 +144,8 @@ def group_with_users_gid(field_name, item_dict, additional_data):
         pass
     return group_name
 
-def hostgroup_with_host_group_name(field_name, item_dict, additional_data):
-    hostgroup_name = ""
-    host_group_name = item_dict['Host-group'][0]
-    hostgroups_by_group_name = additional_data['hostgroups']
-    try:
-        host_hostgroup = hostgroups_by_group_name[host_group_name]
-        hostgroup_name = host_hostgroup['Host-group']
-    #If the key doesn't exist we want to skip it & return the empty string
-    except KeyError:
-        pass
-    return host_group_name
-
 def host_with_ip(field_name, item_dict, additional_data):
-    host_ips_str = ""
-    host_name = item_dict['Host name'][0]
-    ip_addresses = additional_data['ip-address']
     try:
-        host_ips = ip_addresses[host_name]
-        host_ips_str = ", ".join(host_ips)
-    #If the key doesn't exist we want to skip it & return the empty string
-    except KeyError:
-        pass
-    return host_ips_str
+        return [socket.gethostbyname(item_dict['Host name'][0])]
+    except (socket.gaierror, socket.herror):
+        return [None]

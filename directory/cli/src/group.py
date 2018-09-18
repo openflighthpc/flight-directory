@@ -6,6 +6,7 @@ import list_command
 from list_command import field_with_same_name
 import ipa_wrapper_command
 import ipa_utils
+import utils
 from exceptions import IpaRunError
 
 
@@ -36,6 +37,7 @@ def add_commands(directory):
     def list():
         list_command.do(
             ipa_find_command='group-find',
+            all_fields=False,
             field_configs=GROUP_LIST_FIELD_CONFIGS,
             sort_key='Group name',
             blacklist_key='Group name',
@@ -63,23 +65,31 @@ def add_commands(directory):
     # TODO duplication
     @group.command(name='add-member', help='Add user(s) to a group')
     @click.argument('group_name')
-    @click.argument('users', nargs=-1)
+    @click.argument('users', nargs=-1, required=True)
     def add_member(group_name, users):
         _validate_blacklist_groups(group_name, users)
         user_options = ['--users={}'.format(user) for user in users]
         ipa_command = 'group-add-member'
         args = [group_name] + user_options
-        ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        try:
+            ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+            utils.display_success()
+        except IpaRunError:
+            _diagnose_member_command_error(group_name, users, add_command=True)
 
     @group.command(name='remove-member', help='Remove user(s) from a group')
     @click.argument('group_name')
-    @click.argument('users', nargs=-1)
+    @click.argument('users', nargs=-1, required=True)
     def remove_member(group_name, users):
         _validate_blacklist_groups(group_name, users)
         user_options = ['--users={}'.format(user) for user in users]
         ipa_command = 'group-remove-member'
         args = [group_name] + user_options
-        ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+        try:
+            ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+            utils.display_success()
+        except IpaRunError:
+            _diagnose_member_command_error(group_name, users, add_command=False)
 
     wrapper_commands = [
         ipa_wrapper_command.create(
@@ -110,8 +120,58 @@ def add_commands(directory):
     for command in wrapper_commands:
         group.add_command(command)
 
+
 def _validate_blacklist_groups(argument, options={}):
     if argument in GROUP_BLACKLIST:
         error = "The group " + argument + " is a restricted group"
         raise click.ClickException(error)
     return options
+
+
+#add-member & remove-member commands were erroring silently so this method was needed
+def _diagnose_member_command_error(group_name, users, add_command=False):
+    if add_command:
+        error = "Group-add error: "
+    else:
+        error = "Group-remove error: "
+
+    # first checking if group exists
+    try:
+        group_find_args = ['--group-name={}'.format(group_name)]
+        groups_found = ipa_utils.ipa_find('group-find', group_find_args, all_fields=False)
+    except IpaRunError:
+        error = error + '{} - group not found'.format(group_name)
+        raise click.ClickException(error)
+
+    # the other errors are non-castrophic, the command still goes through
+    error = "Non-fatal " + error.lower()
+    # next checking if each user in users exists
+    user_not_found = None
+    for user in users:
+        try:
+            user_find_args = ['--login={}'.format(user)]
+            users_found = ipa_utils.ipa_find('user-find', user_find_args, all_fields=False)
+        except IpaRunError:
+            user_not_found = user
+            break
+    if user_not_found:
+        error = error + '{} - user not found'.format(user_not_found)
+        raise click.ClickException(error)
+
+    #check if the any of the users already are/aren't in the group
+    for user in users:
+        try:
+            group_find_args = ['--group-name={}'.format(group_name), '--users={}'.format(user)]
+            groups_found = ipa_utils.ipa_find('group-find', group_find_args, all_fields=False)
+            #if the user's in the group the cmd's trying to add them to, that's an error
+            if add_command:
+                error = error + "User " + user + " already in the group"
+                raise click.ClickException(error)
+        except IpaRunError:
+            # if the user's not in the group & the cmd's is trying to remove them, that's an error
+            if not add_command:
+                error = error + "User " + user + " not in the group"
+                raise click.ClickException(error)
+
+    error = "Unknown error"
+    raise click.ClickException(error)
