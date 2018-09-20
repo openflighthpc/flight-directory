@@ -7,4 +7,6 @@ set +u
 source venv/bin/activate
 set -u
 
+export LESSSECURE=1
+export LESS="-R -F"
 src/directory "$@"
