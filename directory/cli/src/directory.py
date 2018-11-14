@@ -2,6 +2,7 @@ import click
 from click import ClickException, Group
 import shlex
 import re
+import os
 
 from config import CONFIG
 import utils
