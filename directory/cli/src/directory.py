@@ -35,7 +35,7 @@ class DirectoryGroup(Group):
         # Ignores the actual 'exit' command from the log (as it throws an ExitSandboxException)
         # Instead we write to the log immediately after, as the sandbox exits, with the original command retrieved from the Click context
         # TODO also filter out logs produced through EOF commands like Ctrl+D
-        #   may take an overhaul of logging method + use of atexit module    
+        #   may take an overhaul of logging method + use of atexit module
         except ExitSandboxException:
             raise
         except Exception as error:
