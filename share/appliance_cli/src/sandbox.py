@@ -24,6 +24,7 @@ def add_commands(appliance):
         @click.option('--enable/--disable')
         def advanced(enable):
             os.environ['ADVANCED'] = str(enable)
+            print('Advanced mode %s' % ('enabled' if enable else 'disabled'))
             os.execve(sys.argv[0], sys.argv, os.environ)
 
         try:
