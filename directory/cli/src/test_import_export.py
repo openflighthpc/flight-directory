@@ -1,4 +1,5 @@
 
+import unittest
 from unittest import mock
 import re
 
@@ -129,6 +130,7 @@ def test_import_stops_on_error_and_reports_it(
         "Error: processing line 0 ('group create mygroup'):" in result.output
 
 
+@unittest.skip('Should look into whether or not we even need this test any more')
 def test_import_reports_requests_error_if_occurs(
         tmpdir,
         mocker
