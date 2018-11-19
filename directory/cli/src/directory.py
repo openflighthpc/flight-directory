@@ -2,7 +2,7 @@ import click
 from click import ClickException, Group
 import shlex
 import re
-import os
+from os import getenv
 
 from config import CONFIG
 import utils
@@ -62,7 +62,7 @@ def directory():
     # maybe move calling so only done if needed.
     utils.obtain_kerberos_ticket()
 
-if os.getenv('ADVANCED') == 'True':
+if getenv('ADVANCED') == 'True':
     command_modules = standard_command_modules + [
                 user,
                 group,

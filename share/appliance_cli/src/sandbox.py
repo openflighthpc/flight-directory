@@ -6,7 +6,8 @@ from prompt_toolkit.history import FileHistory
 from config import CONFIG
 import appliance_cli.config_utils as config_utils
 
-import sys, os
+from os import environ, execve
+from sys import argv
 
 def add_commands(appliance):
     sandbox_help = "Start {} CLI REPL".format(config_utils.appliance_name())
@@ -23,9 +24,9 @@ def add_commands(appliance):
         @appliance.command(help='Toggle advanced mode')
         @click.option('--enable/--disable')
         def advanced(enable):
-            os.environ['ADVANCED'] = str(enable)
+            environ['ADVANCED'] = str(enable)
             print('Advanced mode %s' % ('enabled' if enable else 'disabled'))
-            os.execve(sys.argv[0], sys.argv, os.environ)
+            execve(argv[0], argv, environ)
 
         try:
             repl(
