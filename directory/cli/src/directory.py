@@ -11,6 +11,7 @@ import group
 import host
 import hostgroup
 import import_export
+import advanced
 import logger
 from appliance_cli.commands import command_modules as standard_command_modules
 from appliance_cli.sandbox import ExitSandboxException
@@ -61,7 +62,22 @@ def directory():
     # maybe move calling so only done if needed.
     utils.obtain_kerberos_ticket()
 
-command_modules = standard_command_modules + [user, group, import_export, host, hostgroup]
+if os.getenv('ADVANCED') == 'true':
+    command_modules = standard_command_modules + [
+                user,
+                group,
+                import_export,
+                advanced
+            ]
+else:
+    command_modules = standard_command_modules + [
+                user,
+                group,
+                import_export,
+                host,
+                hostgroup,
+                advanced
+            ]
 
 for module in command_modules:
     module.add_commands(directory)
