@@ -67,7 +67,6 @@ if os.getenv('ADVANCED') == 'true':
                 user,
                 group,
                 import_export,
-                advanced
             ]
 else:
     command_modules = standard_command_modules + [
@@ -76,7 +75,6 @@ else:
                 import_export,
                 host,
                 hostgroup,
-                advanced
             ]
 
 for module in command_modules:

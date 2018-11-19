@@ -6,6 +6,7 @@ from prompt_toolkit.history import FileHistory
 from config import CONFIG
 import appliance_cli.config_utils as config_utils
 
+import sys, os
 
 def add_commands(appliance):
     sandbox_help = "Start {} CLI REPL".format(config_utils.appliance_name())
@@ -29,6 +30,19 @@ def add_commands(appliance):
         except ExitSandboxException:
             return
 
+    @appliance.group(help='Toggle advanced mode')
+    def advanced():
+        pass
+
+        @advanced.command(help='Enable advanced mode')
+        def enable():
+            os.environ['ADVANCED'] = 'true'
+            os.execve(sys.argv[0], sys.argv, os.environ)
+
+        @advanced.command(help='Disable advanced mode')
+        def disable():
+            os.environ['ADVANCED'] = 'false'
+            os.execve(sys.argv[0], sys.argv, os.environ)
 
 def _prompt_kwargs():
     prompt = CONFIG.APPLIANCE_TYPE + '> '
