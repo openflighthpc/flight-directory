@@ -11,7 +11,6 @@ import group
 import host
 import hostgroup
 import import_export
-import advanced
 import logger
 from appliance_cli.commands import command_modules as standard_command_modules
 from appliance_cli.sandbox import ExitSandboxException
