@@ -7,6 +7,7 @@ import shlex
 from config import CONFIG
 import appliance_cli
 
+from os import getenv
 
 def obtain_kerberos_ticket():
     # TODO: apparently this is a bad idea, consider using keytab - refer to:
@@ -106,3 +107,6 @@ def display_success():
     command_string = " ".join(original_command().split(" ")[:2])
 #    command_string = " ".join([word.capitalize() for word in command_string])
     click.echo("------------- " + command_string + " successful -------------")
+
+def advanced_mode_enabled():
+    return bool(getenv('ADVANCED'))
