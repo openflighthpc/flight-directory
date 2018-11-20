@@ -109,4 +109,4 @@ def display_success():
     click.echo("------------- " + command_string + " successful -------------")
 
 def advanced_mode_enabled():
-    return bool(getenv('ADVANCED'))
+    return (True if getenv('ADVANCED') == 'True' else False)
