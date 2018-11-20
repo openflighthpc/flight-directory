@@ -61,7 +61,7 @@ def directory():
     # maybe move calling so only done if needed.
     utils.obtain_kerberos_ticket()
 
-if getenv('ADVANCED') == 'True':
+if utils.advanced_mode_enabled():
     command_modules = standard_command_modules + [
                 user,
                 group,
