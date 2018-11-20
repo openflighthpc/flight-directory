@@ -21,12 +21,17 @@ def add_commands(appliance):
         def exit():
             raise ExitSandboxException()
 
-        @appliance.command(help='Toggle advanced mode')
-        @click.option('--enable/--disable')
-        def advanced(enable):
-            environ['ADVANCED'] = str(enable)
-            print('Advanced mode %s' % ('enabled' if enable else 'disabled'))
-            execve(argv[0], argv, environ)
+        @appliance.group(help='Toggle advanced mode')
+        def advanced():
+            pass
+
+        @advanced.command(help='Enable advanced mode')
+        def enable():
+            toggle_advanced_mode(True)
+
+        @advanced.command(help='Disable advanced mode')
+        def disable():
+            toggle_advanced_mode(False)
 
         try:
             repl(
@@ -47,6 +52,12 @@ def _prompt_kwargs():
         'enable_history_search': True,
         'get_title': lambda: title
     }
+
+def toggle_advanced_mode(switch):
+    environ['ADVANCED'] = str(switch)
+    print('Advanced mode %s' % ('enabled' if switch else 'disabled'))
+    execve(argv[0], argv, environ)
+
 
 
 class ExitSandboxException(Exception):
