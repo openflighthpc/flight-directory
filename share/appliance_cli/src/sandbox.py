@@ -9,6 +9,8 @@ import appliance_cli.config_utils as config_utils
 from os import environ, execve
 from sys import argv
 
+from utils import advanced_mode_enabled
+
 def add_commands(appliance):
     sandbox_help = "Start {} CLI REPL".format(config_utils.appliance_name())
     exit_sandbox_help = "Exit the {} CLI".format(config_utils.appliance_name())
@@ -44,7 +46,7 @@ def add_commands(appliance):
             return
 
 def _prompt_kwargs():
-    prompt = CONFIG.APPLIANCE_TYPE + '> '
+    prompt = CONFIG.APPLIANCE_TYPE + (' (advanced)>' if advanced_mode_enabled() else '>')
     title = 'Alces Flight ' + CONFIG.APPLIANCE_TYPE
     return {
         'message': prompt,
