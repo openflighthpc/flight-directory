@@ -58,7 +58,5 @@ def toggle_advanced_mode(switch):
     print('Advanced mode %s' % ('enabled' if switch else 'disabled'))
     execve(argv[0], argv, environ)
 
-
-
 class ExitSandboxException(Exception):
     pass
