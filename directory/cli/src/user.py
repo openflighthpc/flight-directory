@@ -74,7 +74,56 @@ def add_commands(directory):
             error = '{}: user not found'.format(login)
             raise click.ClickException(error)
 
-    wrapper_commands = [
+    if not utils.advanced_mode_enabled():
+        @user.command(help='Create a new user')
+        def create():
+            click.echo('Please enter details for the following:')
+            params = {
+                        'login': click.prompt('  Username'),
+                        'first': click.prompt('  First name'),
+                        'last': click.prompt('  Surname'),
+                        'email': click.prompt('  Email'),
+                     }
+            if click.confirm('Would you like to add a UID to this user?'):
+                params = { **params, 'uid': click.prompt('  UID') }
+
+            wrapper = ipa_wrapper_command._create_ipa_wrapper(
+                'user-add',
+                argument_name='login',
+                transform_options_callback=_transform_create_options,
+                handle_result_callback=_handle_create_result,
+            )
+            wrapper(**params)
+
+
+
+    base_ipa_commands = [
+        ipa_wrapper_command.create(
+            'modify',
+            ipa_command='user-mod',
+            argument_name='login',
+            options=_modify_options(),
+            transform_options_callback=_transform_modify_options,
+            handle_result_callback=_handle_modify_result,
+            help='Modify an existing user',
+        ),
+        ipa_wrapper_command.create(
+            'enable',
+            ipa_command='user-enable',
+            argument_name='login',
+            transform_options_callback=_transform_options,
+            help='Enable a user',
+        ),
+        ipa_wrapper_command.create(
+            'disable',
+            ipa_command='user-disable',
+            argument_name='login',
+            transform_options_callback=_transform_options,
+            help='Disable a user',
+        )
+    ]
+
+    advanced_ipa_commands = [
         ipa_wrapper_command.create(
             'create',
             ipa_command='user-add',
@@ -116,6 +165,11 @@ def add_commands(directory):
             help='Delete a user',
         )
     ]
+
+    wrapper_commands = (
+        advanced_ipa_commands if utils.advanced_mode_enabled()
+        else base_ipa_commands
+    )
 
     for command in wrapper_commands:
         user.add_command(command)
