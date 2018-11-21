@@ -41,7 +41,9 @@ class OptionTransformer:
         return self
 
     def delete_option(self, option_name):
-        del self.options[option_name]
+        if option_name in self.options:
+            del self.options[option_name]
+
         return self
 
     # Modify options using arbitrary `(argument, original_options) -> options`
