@@ -3,6 +3,7 @@ import click
 import ipa_utils
 import utils
 import os
+from collections import defaultdict
 
 
 # TODO: consider using new wrapper_command stuff for this has been written; is
@@ -51,6 +52,7 @@ def _create_ipa_wrapper(
         handle_result_callback=None,
 ):
     def ipa_wrapper(**validated_params):
+        validated_params = defaultdict(lambda: None, validated_params)
 
         # Get argument if present; the other params are options.
         argument = validated_params.pop(argument_name)
