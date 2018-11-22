@@ -83,7 +83,7 @@ def add_commands(directory):
                         'first': click.prompt('  First name'),
                         'last': click.prompt('  Surname'),
                         'email': click.prompt('  Email'),
-                     }
+            }
             if click.confirm('Would you like to add a UID to this user?'):
                 params = { **params, 'uid': click.prompt('  UID') }
 
@@ -95,18 +95,40 @@ def add_commands(directory):
             )
             wrapper(**params)
 
+        @user.command(help='Modify an existing user')
+        def modify():
+            click.echo('Please enter the name of the user you want to modify:')
+            user = click.prompt('  Username')
+            user_find_args = ['--login={}'.format(user)]
+            try:
+                user_data = list_command.find_data(
+                        'user-find',
+                        user_find_args,
+                        all_fields=True
+                )[0]
+            except IpaRunError:
+                # Matches error shown for user show, can extract logic to a method
+                # in the future
+                error = '{}: user not found'.format(user)
+                raise click.ClickException(error)
 
+            click.echo('Modifying user: %s' % user)
+            params = {
+                        'login': user,
+                        'first': click.prompt('  First name', default=user_data['First name'][0]),
+                        'last': click.prompt('  Surname', default=user_data['Last name'][0]),
+                        'email': click.prompt('  Email', default=user_data['Email address'][0])
+            }
+
+            wrapper = ipa_wrapper_command._create_ipa_wrapper(
+                'user-mod',
+                argument_name='login',
+                transform_options_callback=_transform_modify_options,
+                handle_result_callback=_handle_modify_result,
+            )
+            wrapper(**params)
 
     base_ipa_commands = [
-        ipa_wrapper_command.create(
-            'modify',
-            ipa_command='user-mod',
-            argument_name='login',
-            options=_modify_options(),
-            transform_options_callback=_transform_modify_options,
-            handle_result_callback=_handle_modify_result,
-            help='Modify an existing user',
-        ),
         ipa_wrapper_command.create(
             'enable',
             ipa_command='user-enable',
