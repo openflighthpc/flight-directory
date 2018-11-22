@@ -6,6 +6,10 @@ from prompt_toolkit.history import FileHistory
 from config import CONFIG
 import appliance_cli.config_utils as config_utils
 
+from os import environ, execve
+from sys import argv
+
+from utils import advanced_mode_enabled
 
 def add_commands(appliance):
     sandbox_help = "Start {} CLI REPL".format(config_utils.appliance_name())
@@ -19,6 +23,18 @@ def add_commands(appliance):
         def exit():
             raise ExitSandboxException()
 
+        @appliance.group(help='Toggle advanced mode')
+        def advanced():
+            pass
+
+        @advanced.command(help='Enable advanced mode')
+        def enable():
+            toggle_advanced_mode(True)
+
+        @advanced.command(help='Disable advanced mode')
+        def disable():
+            toggle_advanced_mode(False)
+
         try:
             repl(
                 click.get_current_context(),
@@ -29,9 +45,8 @@ def add_commands(appliance):
         except ExitSandboxException:
             return
 
-
 def _prompt_kwargs():
-    prompt = CONFIG.APPLIANCE_TYPE + '> '
+    prompt = CONFIG.APPLIANCE_TYPE + (' (advanced)>' if advanced_mode_enabled() else '>')
     title = 'Alces Flight ' + CONFIG.APPLIANCE_TYPE
     return {
         'message': prompt,
@@ -40,6 +55,15 @@ def _prompt_kwargs():
         'get_title': lambda: title
     }
 
+def toggle_advanced_mode(switch):
+    environ['ADVANCED'] = str(switch)
+    print('Advanced mode %s' % ('enabled' if switch else 'disabled'))
+
+    # execve allows us to create a fresh process of the CLI with advanced mode
+    # toggled on/off. As there are distinct differences in available commands
+    # we need to execute a new process. This takes the script being executed
+    # as its first argument and the arguments required second in argv itself.
+    execve(argv[0], argv, environ)
 
 class ExitSandboxException(Exception):
     pass

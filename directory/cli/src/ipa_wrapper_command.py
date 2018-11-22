@@ -18,7 +18,7 @@ def create(
         transform_options_callback=lambda argument, options: options,
         handle_result_callback=lambda argument, options, result: None,
 ):
-    
+
     if not all([ipa_command, argument_name]):
         raise TypeError
 
@@ -35,7 +35,7 @@ def create(
         transform_options_callback=transform_options_callback,
         handle_result_callback=handle_result_callback
     )
-	
+
     return click.Command(
         command_name,
         callback=ipa_wrapper,
@@ -51,7 +51,7 @@ def _create_ipa_wrapper(
         handle_result_callback=None,
 ):
     def ipa_wrapper(**validated_params):
-	
+
         # Get argument if present; the other params are options.
         argument = validated_params.pop(argument_name)
 
@@ -59,7 +59,7 @@ def _create_ipa_wrapper(
         #   is being replaced with an underscore
         # I couldn't work out why so this is a messy fix for the time being
         if 'ip_address' in validated_params:
-            validated_params['ip-address'] = validated_params['ip_address'] 
+            validated_params['ip-address'] = validated_params['ip_address']
             del validated_params['ip_address']
 
         options = validated_params
@@ -69,11 +69,11 @@ def _create_ipa_wrapper(
             options=options,
             transform_options_callback=transform_options_callback
         )
-        
+
         # if the command is modify host & there's only one item in the args list it's neccesary not to call
         #   the ipa command as a) the option to modify it wouldn't do anything anyway and b) it would result
         #   in a spurious error message if the --ip-address option has been removed in transform_options_callback
-        if not (ipa_command == "host-mod" and len(args) == 1): 
+        if not (ipa_command == "host-mod" and len(args) == 1):
             # want to check if attempting user-add with creation script but that script isn't usable
             #   before completing the user-add
             if (ipa_command == "user-add" and utils.get_user_config('POST_CREATE_SCRIPT') \

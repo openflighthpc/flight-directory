@@ -77,7 +77,7 @@ def do(
     # Remove blacklisted items
     if blacklist_key:
         item_dicts = [item_dict for item_dict in item_dicts if item_dict[blacklist_key][0] not in blacklist_val_array]
-        
+
     if sort_key:
         item_dicts.sort(key=itemgetter(sort_key))
 
