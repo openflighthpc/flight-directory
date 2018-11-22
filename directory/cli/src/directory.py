@@ -61,20 +61,13 @@ def directory():
     # maybe move calling so only done if needed.
     utils.obtain_kerberos_ticket()
 
+command_modules = standard_command_modules + [
+            user,
+            group,
+            import_export,
+        ]
 if utils.advanced_mode_enabled():
-    command_modules = standard_command_modules + [
-                user,
-                group,
-                import_export,
-                host,
-                hostgroup,
-            ]
-else:
-    command_modules = standard_command_modules + [
-                user,
-                group,
-                import_export,
-            ]
+    command_modules += [host, hostgroup]
 
 for module in command_modules:
     module.add_commands(directory)
