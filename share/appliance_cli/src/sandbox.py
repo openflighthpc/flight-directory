@@ -58,6 +58,11 @@ def _prompt_kwargs():
 def toggle_advanced_mode(switch):
     environ['ADVANCED'] = str(switch)
     print('Advanced mode %s' % ('enabled' if switch else 'disabled'))
+
+    # execve allows us to create a fresh process of the CLI with advanced mode
+    # toggled on/off. As there are distinct differences in available commands
+    # we need to execute a new process. This takes the script being executed
+    # as its first argument and the arguments required second in argv itself.
     execve(argv[0], argv, environ)
 
 class ExitSandboxException(Exception):
