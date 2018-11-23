@@ -1,11 +1,16 @@
 
 from unittest import mock
 
-from directory import directory
+import directory
 import ipa_utils
+import test_utils
 import appliance_cli.utils
 from appliance_cli.testing_utils import click_run
 
+
+# This setup runs before every test ensuring that they are run in advanced mode
+def setUpModule():
+    test_utils.reload_in_advanced_mode()
 
 def test_user_create_includes_random_by_default(
     mocker
@@ -102,7 +107,7 @@ def test_user_modify_passes_random_password_when_given_remove_password(
 def _test_options_passed_to_ipa(mocker, directory_command, ipa_run_arguments):
     mocker.spy(ipa_utils, 'ipa_run')
 
-    click_run(directory, directory_command)
+    click_run(directory.directory, directory_command)
 
     assert ipa_utils.ipa_run.call_args_list == [
         mock.call(*ipa_run_arguments),
