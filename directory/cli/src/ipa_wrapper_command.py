@@ -30,7 +30,7 @@ def create(
     ]
     params = [argument] + options
 
-    ipa_wrapper = _create_ipa_wrapper(
+    ipa_wrapper = create_ipa_wrapper(
         ipa_command,
         argument_name=argument_name,
         transform_options_callback=transform_options_callback,
@@ -45,7 +45,7 @@ def create(
     )
 
 
-def _create_ipa_wrapper(
+def create_ipa_wrapper(
         ipa_command,
         argument_name=None,
         transform_options_callback=None,

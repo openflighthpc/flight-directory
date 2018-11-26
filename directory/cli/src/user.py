@@ -87,7 +87,7 @@ def add_commands(directory):
             if click.confirm('Would you like to add a UID to this user?'):
                 params = { **params, 'uid': click.prompt('  UID') }
 
-            wrapper = ipa_wrapper_command._create_ipa_wrapper(
+            wrapper = ipa_wrapper_command.create_ipa_wrapper(
                 'user-add',
                 argument_name='login',
                 transform_options_callback=_transform_create_options,
@@ -120,7 +120,7 @@ def add_commands(directory):
                         'email': click.prompt('  Email', default=user_data['Email address'][0])
             }
 
-            wrapper = ipa_wrapper_command._create_ipa_wrapper(
+            wrapper = ipa_wrapper_command.create_ipa_wrapper(
                 'user-mod',
                 argument_name='login',
                 transform_options_callback=_transform_modify_options,
