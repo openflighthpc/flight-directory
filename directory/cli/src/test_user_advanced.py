@@ -12,9 +12,7 @@ from appliance_cli.testing_utils import click_run
 def setUpModule():
     test_utils.reload_in_advanced_mode()
 
-def test_user_create_includes_random_by_default(
-    mocker
-):
+def test_user_create_includes_random_by_default(mocker):
     _test_options_passed_to_ipa(
         mocker,
         ['user', 'create', 'barney', '--first', 'Barney', '--last', 'Rubble'],
