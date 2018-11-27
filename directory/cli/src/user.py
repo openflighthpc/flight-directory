@@ -78,6 +78,7 @@ def add_commands(directory):
         @user.command(help='Create a new user')
         def create():
             click.echo('Please enter details for the following:')
+
             params = {
                         'login': click.prompt('  Username'),
                         'first': click.prompt('  First name'),
@@ -86,6 +87,20 @@ def add_commands(directory):
             }
             if click.confirm('Would you like to add a UID to this user?'):
                 params = { **params, 'uid': click.prompt('  UID') }
+
+            try:
+                group_data = list_command.find_data(
+                        'group-find',
+                        ['clusterusers'],
+                        all_fields=False
+                        )[0]
+            except IpaRunError:
+                error = '{}: group not found'.format('clusterusers')
+                raise click.ClickException(error)
+
+            if group_data.get('GID'):
+                params = { **params, 'gidnumber': group_data['GID'][0]}
+
 
             wrapper = ipa_wrapper_command.create_ipa_wrapper(
                 'user-add',

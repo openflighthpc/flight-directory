@@ -21,6 +21,17 @@ def test_user_create_calls_ipa_correctly(mocker):
         'walterwhite\nWalter\nWhite\nheisenberg@example.com\nNo\n',
         [
             (
+                'group-find',
+                [
+                    [
+                        'clusterusers',
+                        '--sizelimit', '0'
+                    ],
+                    None
+                ],
+                { 'record': False }
+            ),
+            (
                 'user-add',
                 [
                     [
