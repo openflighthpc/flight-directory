@@ -114,10 +114,19 @@ def add_commands(directory):
 
             click.echo('Modifying user: %s' % user)
             params = {
-                        'login': user,
-                        'first': click.prompt('  First name', default=user_data['First name'][0]),
-                        'last': click.prompt('  Surname', default=user_data['Last name'][0]),
-                        'email': click.prompt('  Email', default=user_data['Email address'][0])
+                'login': user,
+                'first': click.prompt(
+                    '  First name',
+                    default=user_data.get('First name', 'empty')[0]
+                ),
+                'last': click.prompt(
+                    '  Surname',
+                    default=user_data.get('Last name', 'empty')[0]
+                ),
+                'email': click.prompt(
+                    '  Email',
+                    default=user_data.get('Email address', 'empty')[0]
+                )
             }
 
             wrapper = ipa_wrapper_command.create_ipa_wrapper(
