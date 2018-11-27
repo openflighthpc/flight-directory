@@ -252,7 +252,6 @@ def _user_options(require_names=True):
         '--shell': {'help': 'Login shell'},
         '--email': {'help': 'Email address'},
         '--uid': {'help': 'User ID Number'},
-        '--gidnumber': {'help': 'Group ID Number'},
         '--key': {'help': 'SSH public key'},
         '--homedir': {'help': 'Home directory'},
         '--gecos': {'help': 'GECOS field'},
