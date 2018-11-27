@@ -88,19 +88,10 @@ def add_commands(directory):
             if click.confirm('Would you like to add a UID to this user?'):
                 params = { **params, 'uid': click.prompt('  UID') }
 
-            try:
-                group_data = list_command.find_data(
-                        'group-find',
-                        ['clusterusers'],
-                        all_fields=False
-                        )[0]
-            except IpaRunError:
-                error = '{}: group not found'.format('clusterusers')
-                raise click.ClickException(error)
+            group_id = _get_group_id('clusterusers')
 
-            if group_data.get('GID'):
-                params = { **params, 'gidnumber': group_data['GID'][0]}
-
+            if group_id:
+                params = { **params, 'gidnumber': group_id[0] }
 
             wrapper = ipa_wrapper_command.create_ipa_wrapper(
                 'user-add',
@@ -322,7 +313,6 @@ def _transform_options(argument, options):
     _validate_blacklist_users(argument)
     return options
 
-
 def _transform_create_options(argument, options):
     _validate_blacklist_users(argument)
     _validate_create_uid(options['uid'])
@@ -500,3 +490,14 @@ def _run_post_create_script(login):
         except subprocess.CalledProcessError as ex:
             error = script_result.stdout if error_in_stdout else script_result.stderr
             raise IpaRunError(error) from ex
+
+def _get_group_id(group):
+    try:
+        return list_command.find_data(
+                'group-find',
+                [group],
+                all_fields=False
+                )[0].get('GID')
+    except IpaRunError:
+        error = '{}: group not found'.format('clusterusers')
+        raise click.ClickException(error)
