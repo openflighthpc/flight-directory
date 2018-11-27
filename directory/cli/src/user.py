@@ -90,11 +90,6 @@ def add_commands(directory):
             ):
                 params = { **params, 'uid': click.prompt('  UID') }
 
-            group_id = _get_group_id('clusterusers')
-
-            if group_id:
-                params = { **params, 'gidnumber': group_id[0] }
-
             wrapper = ipa_wrapper_command.create_ipa_wrapper(
                 'user-add',
                 argument_name='login',
@@ -302,8 +297,13 @@ def _transform_options(argument, options):
 def _transform_create_options(argument, options):
     _validate_blacklist_users(argument)
     _validate_create_uid(options['uid'])
-    if options['gidnumber'] == None and utils.detect_user_config():
+    if utils.detect_user_config():
         options['gidnumber'] = utils.get_user_config('DEFAULT_GID')
+    else:
+        group_id = _get_group_id('clusterusers')
+
+        if group_id:
+            options['gidnumber'] = group_id[0]
     if utils.get_password_policy():
         return OptionTransformer(argument, options).\
             rename_flag_option('make_password', 'random').\
