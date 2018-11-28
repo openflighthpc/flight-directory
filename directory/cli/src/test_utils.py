@@ -36,6 +36,9 @@ def mock_ipa_find_output(mocker):
                         }
                     ]
         elif ipa_command == 'user-find':
+            if '--uid' in ipa_args[0]:
+                return None
+
             username = ipa_args[0].replace('--login=', '')
             return  [
                         {
