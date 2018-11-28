@@ -52,6 +52,9 @@ def create_ipa_wrapper(
         handle_result_callback=None,
 ):
     def ipa_wrapper(**validated_params):
+        # This method is called by both Click as a callback and manually for the simple commands.
+        # Using a defaultdict allows for handling these params in the same way regardless of
+        # how this method is called.
         validated_params = defaultdict(lambda: None, validated_params)
 
         # Get argument if present; the other params are options.
