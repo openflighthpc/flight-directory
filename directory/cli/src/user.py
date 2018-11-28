@@ -501,5 +501,5 @@ def _get_group_id(group):
             all_fields=False
         )[0].get('GID')
     except IpaRunError:
-        error = '{}: group not found'.format('clusterusers')
+        error = '{}: group not found'.format(group)
         raise click.ClickException(error)
