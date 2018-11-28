@@ -182,20 +182,6 @@ def add_commands(directory):
             help='Modify an existing user',
         ),
         ipa_wrapper_command.create(
-            'enable',
-            ipa_command='user-enable',
-            argument_name='login',
-            transform_options_callback=_transform_options,
-            help='Enable a user',
-        ),
-        ipa_wrapper_command.create(
-            'disable',
-            ipa_command='user-disable',
-            argument_name='login',
-            transform_options_callback=_transform_options,
-            help='Disable a user',
-        ),
-        ipa_wrapper_command.create(
             'delete',
             ipa_command='user-del',
             argument_name='login',
