@@ -11,14 +11,10 @@ from unittest import mock
 from appliance_cli.testing_utils import click_run
 
 def reload_in_advanced_mode():
-    execute_reload('true')
+    _execute_reload('true')
 
 def reload_in_simple_mode():
-    execute_reload('false')
-
-def execute_reload(val):
-    os.environ['ADVANCED'] = val
-    importlib.reload(directory)
+    _execute_reload('false')
 
 def mock_options_passed_to_ipa(mocker, directory_command, ipa_run_arguments, input_stream=None):
     mocker.spy(ipa_utils, 'ipa_run')
@@ -29,6 +25,10 @@ def mock_options_passed_to_ipa(mocker, directory_command, ipa_run_arguments, inp
         _mock_call(command_with_args) for command_with_args in ipa_run_arguments
     ]
     assert ipa_utils.ipa_run.call_args_list == expected_ipa_calls
+
+def _execute_reload(val):
+    os.environ['ADVANCED'] = val
+    importlib.reload(directory)
 
 def _mock_call(command_with_args):
     command, args, *rest = command_with_args
