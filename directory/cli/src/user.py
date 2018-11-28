@@ -120,15 +120,15 @@ def add_commands(directory):
                 'login': user,
                 'first': click.prompt(
                     '  First name',
-                    default=user_data.get('First name', 'empty')[0]
+                    default=user_data['First name'][0]
                 ),
                 'last': click.prompt(
                     '  Surname',
-                    default=user_data.get('Last name', 'empty')[0]
+                    default=user_data['Last name'][0]
                 ),
                 'email': click.prompt(
                     '  Email',
-                    default=user_data.get('Email address', 'empty')[0]
+                    default=user_data['Email address'][0]
                 )
             }
 
@@ -302,8 +302,7 @@ def _transform_create_options(argument, options):
     else:
         group_id = _get_group_id('clusterusers')
 
-        if group_id:
-            options['gidnumber'] = group_id[0]
+        options['gidnumber'] = group_id
     if utils.get_password_policy():
         return OptionTransformer(argument, options).\
             rename_flag_option('make_password', 'random').\
@@ -483,7 +482,7 @@ def _get_group_id(group):
             'group-find',
             [group],
             all_fields=False
-        )[0].get('GID')
+        )[0].get('GID')[0]
     except IpaRunError:
         error = '{}: group not found'.format(group)
         raise click.ClickException(error)
