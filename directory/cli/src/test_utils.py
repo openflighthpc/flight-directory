@@ -27,7 +27,9 @@ def mock_options_passed_to_ipa(mocker, directory_command, ipa_run_arguments, inp
     assert ipa_utils.ipa_run.call_args_list == expected_ipa_calls
 
 def mock_ipa_find_output(mocker):
+    # Mocks ipa_utils.ipa_find for the command given
     def mock_ipa_find(ipa_command, ipa_args, *args, **kwargs):
+        # Tests that expect to call group-find grab the mocked GID here
         if ipa_command == 'group-find':
             group_name = ipa_args[0]
             return  [
@@ -35,10 +37,16 @@ def mock_ipa_find_output(mocker):
                             'GID': ['{}_gid'.format(group_name)]
                         }
                     ]
+
+        # Tests that need user data found via calling user-find go here
         elif ipa_command == 'user-find':
+            # If the test searches via UID for an existing user we return
+            # none to mock that the user is new
             if '--uid' in ipa_args[0]:
                 return None
 
+            # Mock data is returned to tests that call user-find and require
+            # values that aren't empty
             username = ipa_args[0].replace('--login=', '')
             return  [
                         {
