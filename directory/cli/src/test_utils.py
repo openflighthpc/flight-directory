@@ -26,6 +26,27 @@ def mock_options_passed_to_ipa(mocker, directory_command, ipa_run_arguments, inp
     ]
     assert ipa_utils.ipa_run.call_args_list == expected_ipa_calls
 
+def mock_ipa_find_output(mocker):
+    def mock_ipa_find(ipa_command, ipa_args, *args, **kwargs):
+        if ipa_command == 'group-find':
+            group_name = ipa_args[0]
+            return  [
+                        {
+                            'GID': ['{}_gid'.format(group_name)]
+                        }
+                    ]
+        elif ipa_command == 'user-find':
+            username = ipa_args[0].replace('--login=', '')
+            return  [
+                        {
+                            'First name': ['{}_first'.format(username)],
+                            'Last name': ['{}_last'.format(username)],
+                            'Email address': ['{}_email'.format(username)]
+                        }
+                    ]
+
+    mocker.patch('ipa_utils.ipa_find', mock_ipa_find)
+
 def _reload_with_advanced_set_to(val):
     os.environ['ADVANCED'] = val
     importlib.reload(directory)
