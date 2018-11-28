@@ -18,6 +18,7 @@ def test_import_runs_directory_cli_with_each_line(
         mocker
 ):
     mocker.spy(utils, 'directory_run')
+    test_utils.mock_ipa_find_output(mocker)
 
     test_record = tmpdir.mkdir('somedir').join('record').strpath
     with open(test_record, 'w') as record_file:
@@ -45,6 +46,7 @@ def test_import_outputs_last_password_generated_for_each_user(
     mocker.spy(utils, 'directory_run')
 
     _mock_ipa_run_output(monkeypatch)
+    test_utils.mock_ipa_find_output(mocker)
 
     # TODO this tests a lot of related things; could be worth breaking up into
     # more discrete tests.
@@ -95,7 +97,7 @@ def _mock_ipa_run_output(monkeypatch):
 
         mock_output_lines = [
             'Junk: junk entry',
-            'User login: {}'.format(user_login),
+            'User login: {}'.format(user_login)
         ]
         if '--random' in ipa_args:
             # Assume that if `--random` arg is passed, the IPA command will

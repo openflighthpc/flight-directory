@@ -12,21 +12,11 @@ def setUpModule():
     test_utils.reload_in_simple_mode()
 
 def test_user_create_calls_ipa_correctly(mocker):
+    test_utils.mock_ipa_find_output(mocker)
     test_utils.mock_options_passed_to_ipa(
         mocker,
         ['user', 'create'],
         [
-            (
-                'group-find',
-                [
-                    [
-                        'clusterusers',
-                        '--sizelimit', '0'
-                    ],
-                    None
-                ],
-                { 'record': False }
-            ),
             (
                 'user-add',
                 [
@@ -34,6 +24,7 @@ def test_user_create_calls_ipa_correctly(mocker):
                         'walterwhite',
                         '--email', 'heisenberg@example.com',
                         '--first', 'Walter',
+                        '--gidnumber', 'clusterusers_gid',
                         '--last', 'White',
                         '--random'
                     ]
@@ -44,22 +35,11 @@ def test_user_create_calls_ipa_correctly(mocker):
     )
 
 def test_user_modify_calls_ipa_correctly(mocker):
+    test_utils.mock_ipa_find_output(mocker)
     test_utils.mock_options_passed_to_ipa(
         mocker,
         ['user', 'modify'],
         [
-            (
-                'user-find',
-                [
-                    [
-                        '--login=walterwhite',
-                        '--all',
-                        '--sizelimit', '0'
-                    ],
-                    None
-                ],
-                { 'record': False }
-            ),
             (
                 'user-mod',
                 [

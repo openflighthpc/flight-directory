@@ -11,25 +11,21 @@ def setUpModule():
     test_utils.reload_in_advanced_mode()
 
 def test_user_create_includes_random_by_default(mocker):
+    test_utils.mock_ipa_find_output(mocker)
     test_utils.mock_options_passed_to_ipa(
         mocker,
         ['user', 'create', 'barney', '--first', 'Barney', '--last', 'Rubble'],
         [
             (
-                'group-find',
-                [
-                    [
-                        'clusterusers',
-                        '--sizelimit', '0'
-                    ],
-                    None
-                ],
-              { 'record': False }
-            ),
-            (
                 'user-add',
                 [
-                    ['barney', '--first', 'Barney', '--last', 'Rubble', '--random']
+                    [
+                        'barney',
+                        '--first',  'Barney',
+                        '--gidnumber', 'clusterusers_gid',
+                        '--last', 'Rubble',
+                        '--random'
+                    ]
                 ]
             )
         ],
@@ -37,26 +33,21 @@ def test_user_create_includes_random_by_default(mocker):
 
 
 def test_user_create_does_not_pass_random_when_given_no_password(mocker):
+    test_utils.mock_ipa_find_output(mocker)
     test_utils.mock_options_passed_to_ipa(
         mocker,
         ['user', 'create', 'barney', '--first', 'Barney',
             '--last', 'Rubble', '--no-password'],
         [
             (
-                'group-find',
-                [
-                    [
-                        'clusterusers',
-                        '--sizelimit', '0'
-                    ],
-                    None
-                ],
-              { 'record': False }
-            ),
-            (
                 'user-add',
                 [
-                    ['barney', '--first', 'Barney', '--last', 'Rubble']
+                    [
+                        'barney',
+                        '--first', 'Barney',
+                        '--gidnumber', 'clusterusers_gid',
+                        '--last', 'Rubble'
+                    ]
                 ]
             )
         ]
@@ -64,27 +55,23 @@ def test_user_create_does_not_pass_random_when_given_no_password(mocker):
 
 
 def test_user_create_passes_sshpubkey_when_given_key(mocker):
+    test_utils.mock_ipa_find_output(mocker)
     test_utils.mock_options_passed_to_ipa(
         mocker,
         ['user', 'create', 'barney', '--first', 'Barney', '--last', 'Rubble',
             '--key', 'ssh-rsa somekey key_name'],
         [
             (
-                'group-find',
-                [
-                    [
-                        'clusterusers',
-                        '--sizelimit', '0'
-                    ],
-                    None
-                ],
-              { 'record': False }
-            ),
-            (
                 'user-add',
                 [
-                    ['barney', '--first', 'Barney', '--last', 'Rubble', '--random',
-                '--sshpubkey', 'ssh-rsa somekey key_name']
+                    [
+                        'barney',
+                        '--first', 'Barney',
+                        '--gidnumber', 'clusterusers_gid',
+                        '--last', 'Rubble',
+                        '--random',
+                        '--sshpubkey', 'ssh-rsa somekey key_name'
+                    ]
                 ]
             )
         ]
