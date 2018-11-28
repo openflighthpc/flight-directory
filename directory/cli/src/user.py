@@ -205,10 +205,9 @@ def add_commands(directory):
         )
     ]
 
-    wrapper_commands = (
-        advanced_ipa_wrapper_commands if utils.advanced_mode_enabled()
-        else base_ipa_wrapper_commands
-    )
+    wrapper_commands = base_ipa_wrapper_commands
+    if utils.advanced_mode_enabled():
+        wrapper_commands += advanced_ipa_wrapper_commands
 
     for command in wrapper_commands:
         user.add_command(command)
