@@ -120,7 +120,7 @@ def add_commands(directory):
                 error = '{}: user not found'.format(user)
                 raise click.ClickException(error)
 
-            click.echo('Modifying user: %s' % user)
+            click.echo('Modifying user (%s)' % user)
             params = {
                 'login': user,
                 'first': click.prompt(
