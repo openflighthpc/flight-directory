@@ -72,7 +72,7 @@ def do(
     if not all([ipa_find_command, field_configs]):
         raise TypeError
 
-    item_dicts = find_data(ipa_find_command, ipa_find_args, all_fields=all_fields)
+    item_dicts = ipa_utils.ipa_find(command, args, all_fields=all_fields)
 
     # Remove blacklisted items
     if blacklist_key:
@@ -150,5 +150,3 @@ def host_with_ip(field_name, item_dict, additional_data):
     except (socket.gaierror, socket.herror):
         return [None]
 
-def find_data(command, args, all_fields):
-    return ipa_utils.ipa_find(command, args, all_fields=all_fields)

@@ -109,7 +109,7 @@ def add_commands(directory):
             user = click.prompt('  Username')
             user_find_args = ['--login={}'.format(user)]
             try:
-                user_data = list_command.find_data(
+                user_data = ipa_utils.ipa_find(
                         'user-find',
                         user_find_args,
                         all_fields=True
@@ -495,11 +495,11 @@ def _run_post_create_script(login):
 
 def _get_group_id(group):
     try:
-        return list_command.find_data(
-                'group-find',
-                [group],
-                all_fields=False
-                )[0].get('GID')
+        return ipa_utils.ipa_find(
+            'group-find',
+            [group],
+            all_fields=False
+        )[0].get('GID')
     except IpaRunError:
         error = '{}: group not found'.format('clusterusers')
         raise click.ClickException(error)
