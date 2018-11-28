@@ -105,4 +105,3 @@ def test_user_modify_without_modifications_calls_ipa_correctly(mocker):
         ],
         'walterwhite\n\n\n\n\n'
     )
-
