@@ -145,7 +145,7 @@ def add_commands(directory):
             )
             wrapper(**params)
 
-    base_ipa_commands = [
+    base_ipa_wrapper_commands = [
         ipa_wrapper_command.create(
             'enable',
             ipa_command='user-enable',
@@ -162,7 +162,7 @@ def add_commands(directory):
         )
     ]
 
-    advanced_ipa_commands = [
+    advanced_ipa_wrapper_commands = [
         ipa_wrapper_command.create(
             'create',
             ipa_command='user-add',
@@ -206,8 +206,8 @@ def add_commands(directory):
     ]
 
     wrapper_commands = (
-        advanced_ipa_commands if utils.advanced_mode_enabled()
-        else base_ipa_commands
+        advanced_ipa_wrapper_commands if utils.advanced_mode_enabled()
+        else base_ipa_wrapper_commands
     )
 
     for command in wrapper_commands:
