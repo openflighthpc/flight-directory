@@ -95,7 +95,7 @@ def add_commands(directory):
         except IpaRunError:
             _diagnose_member_command_error(group_name, users, add_command=False)
 
-    wrapper_commands = [
+    advanced_ipa_wrapper_commands = [
         ipa_wrapper_command.create(
             'create',
             ipa_command='group-add',
@@ -121,9 +121,9 @@ def add_commands(directory):
         )
     ]
 
-    for command in wrapper_commands:
-        group.add_command(command)
-
+    if utils.advanced_mode_enabled():
+        for command in advanced_ipa_wrapper_commands:
+            group.add_command(command)
 
 def _validate_blacklist_groups(argument, options={}):
     if argument in GROUP_BLACKLIST:
