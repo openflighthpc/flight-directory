@@ -62,8 +62,12 @@ def add_commands(directory):
             raise click.ClickException(error)
 
 
+    @group.group(name='member', help='Handle group membership')
+    def member():
+        pass
+
     # TODO duplication
-    @group.command(name='add-member', help='Add user(s) to a group')
+    @member.command(name='add', help='Add user(s) to a group')
     @click.argument('group_name')
     @click.argument('users', nargs=-1, required=True)
     def add_member(group_name, users):
@@ -77,7 +81,7 @@ def add_commands(directory):
         except IpaRunError:
             _diagnose_member_command_error(group_name, users, add_command=True)
 
-    @group.command(name='remove-member', help='Remove user(s) from a group')
+    @member.command(name='remove', help='Remove user(s) from a group')
     @click.argument('group_name')
     @click.argument('users', nargs=-1, required=True)
     def remove_member(group_name, users):
