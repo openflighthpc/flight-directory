@@ -297,12 +297,10 @@ def _transform_options(argument, options):
 def _transform_create_options(argument, options):
     _validate_blacklist_users(argument)
     _validate_create_uid(options['uid'])
-    if utils.detect_user_config():
-        options['gidnumber'] = utils.get_user_config('DEFAULT_GID')
-    else:
-        group_id = _get_group_id('clusterusers')
 
-        options['gidnumber'] = group_id
+    group_id = _get_group_id('clusterusers')
+    options['gidnumber'] = group_id
+
     if utils.get_password_policy():
         return OptionTransformer(argument, options).\
             rename_flag_option('make_password', 'random').\
@@ -477,12 +475,18 @@ def _run_post_create_script(login):
             raise IpaRunError(error) from ex
 
 def _get_group_id(group):
-    try:
-        return ipa_utils.ipa_find(
-            'group-find',
-            [group],
-            all_fields=False
-        )[0].get('GID')[0]
-    except IpaRunError:
-        error = '{}: group not found'.format(group)
-        raise click.ClickException(error)
+    # If a default GID is set within the config this takes precedence
+    if utils.detect_user_config():
+        return utils.get_user_config('DEFAULT_GID')
+    else:
+        # If there is no config value set it attempts to set the GID to
+        # the 'clusterusers' group
+        try:
+            return ipa_utils.ipa_find(
+                'group-find',
+                [group],
+                all_fields=False
+            )[0].get('GID')[0]
+        except IpaRunError:
+            error = '{}: group not found'.format(group)
+            raise click.ClickException(error)
