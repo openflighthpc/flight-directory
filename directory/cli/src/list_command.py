@@ -72,7 +72,7 @@ def do(
     if not all([ipa_find_command, field_configs]):
         raise TypeError
 
-    item_dicts = ipa_utils.ipa_find(command, args, all_fields=all_fields)
+    item_dicts = ipa_utils.ipa_find(ipa_find_command, ipa_find_args, all_fields=all_fields)
 
     # Remove blacklisted items
     if blacklist_key:
