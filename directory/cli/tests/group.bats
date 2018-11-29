@@ -2,6 +2,7 @@
 
 DIRECTORY_CLI=bin/starter
 DIRECTORY_DIR=/opt/directory
+export ADVANCED=true
 
 delete_flintstones_group() {
   ipa group-del flintstones --continue
@@ -81,21 +82,21 @@ setup() {
   [ ! "$status" -eq 0 ]
 }
 
-@test '`directory group add-member` adds given user(s) to group' {
+@test '`directory group member add` adds given user(s) to group' {
   local group_info
 
   create_flintstones_group
   create_fred_user
   create_barney_user
 
-  "$DIRECTORY_CLI" group add-member flintstones fred barney
+  "$DIRECTORY_CLI" group member add flintstones fred barney
 
   group_info="$(ipa group-find flintstones --raw --all)"
   echo "$group_info" | grep 'member: uid=fred,'
   echo "$group_info" | grep 'member: uid=barney,'
 }
 
-@test '`directory group remove-member` removes given user(s) from group' {
+@test '`directory group member remove` removes given user(s) from group' {
   local group_info
 
   create_flintstones_group
@@ -103,7 +104,7 @@ setup() {
   create_barney_user
   ipa group-add-member flintstones --users={fred,barney}
 
-  "$DIRECTORY_CLI" group remove-member flintstones fred barney
+  "$DIRECTORY_CLI" group member remove flintstones fred barney
 
   group_info="$(ipa group-find flintstones --raw --all)"
   echo "$group_info" | grep 'member: uid=fred,' | [ $(wc -l) -eq 0 ]

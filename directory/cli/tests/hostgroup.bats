@@ -2,6 +2,7 @@
 
 DIRECTORY_CLI=bin/starter
 DIRECTORY_DIR=/opt/directory
+export ADVANCED=true
 
 delete_butlers_group() {
   ipa hostgroup-del butlers --continue
