@@ -149,3 +149,4 @@ def host_with_ip(field_name, item_dict, additional_data):
         return [socket.gethostbyname(item_dict['Host name'][0])]
     except (socket.gaierror, socket.herror):
         return [None]
+

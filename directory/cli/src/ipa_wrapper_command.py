@@ -3,6 +3,7 @@ import click
 import ipa_utils
 import utils
 import os
+from collections import defaultdict
 
 
 # TODO: consider using new wrapper_command stuff for this has been written; is
@@ -29,7 +30,7 @@ def create(
     ]
     params = [argument] + options
 
-    ipa_wrapper = _create_ipa_wrapper(
+    ipa_wrapper = create_ipa_wrapper(
         ipa_command,
         argument_name=argument_name,
         transform_options_callback=transform_options_callback,
@@ -44,13 +45,17 @@ def create(
     )
 
 
-def _create_ipa_wrapper(
+def create_ipa_wrapper(
         ipa_command,
         argument_name=None,
         transform_options_callback=None,
         handle_result_callback=None,
 ):
     def ipa_wrapper(**validated_params):
+        # This method is called by both Click as a callback and manually for the simple commands.
+        # Using a defaultdict allows for handling these params in the same way regardless of
+        # how this method is called.
+        validated_params = defaultdict(lambda: None, validated_params)
 
         # Get argument if present; the other params are options.
         argument = validated_params.pop(argument_name)

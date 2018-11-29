@@ -3,11 +3,15 @@ import unittest
 from unittest import mock
 import re
 
-from directory import directory
+import directory
 import utils
 import ipa_utils
+import test_utils
 from appliance_cli.testing_utils import click_run
 
+# This setup runs before every test ensuring that they are run in advanced mode
+def setUpModule():
+    test_utils.reload_in_advanced_mode()
 
 def test_import_runs_directory_cli_with_each_line(
         tmpdir,
@@ -24,12 +28,12 @@ def test_import_runs_directory_cli_with_each_line(
 
     test_record_url = 'file://' + test_record
 
-    click_run(directory, ['import', test_record_url])
+    click_run(directory.directory, ['import', test_record_url])
 
     assert utils.directory_run.call_count == 2
     assert utils.directory_run.call_args_list == [
-        mock.call(directory, 'group create mygroup'),
-        mock.call(directory, 'user create someuser --first some --last user')
+        mock.call(directory.directory, 'group create mygroup'),
+        mock.call(directory.directory, 'user create someuser --first some --last user')
     ]
 
 
@@ -63,7 +67,7 @@ def test_import_outputs_last_password_generated_for_each_user(
 
     test_record_url = 'file://' + test_record
 
-    result = click_run(directory, ['import', test_record_url])
+    result = click_run(directory.directory, ['import', test_record_url])
 
     assert re.search('newuser.*newuser_user-add_password', result.output)
 
@@ -121,7 +125,7 @@ def test_import_stops_on_error_and_reports_it(
 
     test_record_url = 'file://' + test_record
 
-    result = click_run(directory, ['import', test_record_url])
+    result = click_run(directory.directory, ['import', test_record_url])
 
     # Assert only called once as first fails.
     assert utils.directory_run.call_count == 1
@@ -139,6 +143,6 @@ def test_import_reports_requests_error_if_occurs(
 
     test_bad_record_url = 'some/path/which/isnt/a/url'
 
-    result = click_run(directory, ['import', test_bad_record_url])
+    result = click_run(directory.directory, ['import', test_bad_record_url])
 
     assert "Invalid URL 'some/path/which/isnt/a/url':" in result.output
