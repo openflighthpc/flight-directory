@@ -31,10 +31,11 @@ def mock_ipa_find_output(mocker):
     def mock_ipa_find(ipa_command, ipa_args, *args, **kwargs):
         # Tests that expect to call group-find grab the mocked GID here
         if ipa_command == 'group-find':
-            group_name = ipa_args[0]
+            group_name = ipa_args[0].replace('--group-name=', '')
             return  [
                         {
-                            'GID': ['{}_gid'.format(group_name)]
+                            'GID': ['{}_gid'.format(group_name)],
+                            'Description': ['{}_desc'.format(group_name)]
                         }
                     ]
 
