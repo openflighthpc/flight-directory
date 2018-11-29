@@ -5,19 +5,22 @@ import utils
 import os
 from collections import defaultdict
 
+def _default_transform_options_callback(argument, options):
+    return options
+
+def _default_handle_result_callback(argument, options, result):
+    return None
 
 # TODO: consider using new wrapper_command stuff for this has been written; is
 # more flexible.
-
-
 def create(
         command_name,
         ipa_command=None,
         argument_name=None,
         help='',
         options={},
-        transform_options_callback=lambda argument, options: options,
-        handle_result_callback=lambda argument, options, result: None,
+        transform_options_callback=_default_transform_options_callback,
+        handle_result_callback=_default_handle_result_callback
 ):
 
     if not all([ipa_command, argument_name]):
@@ -48,8 +51,8 @@ def create(
 def create_ipa_wrapper(
         ipa_command,
         argument_name=None,
-        transform_options_callback=None,
-        handle_result_callback=None,
+        transform_options_callback=_default_transform_options_callback,
+        handle_result_callback=_default_handle_result_callback
 ):
     def ipa_wrapper(**validated_params):
         # This method is called by both Click as a callback and manually for the simple commands.
