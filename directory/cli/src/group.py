@@ -116,6 +116,40 @@ def add_commands(directory):
             )
             wrapper(**params)
 
+        @group.command(name='modify', help='Modify an existing group')
+        def modify():
+            click.echo('Please enter the name of the group you want to modify:')
+            group = click.prompt('  Group name')
+            group_find_args = ['--group-name={}'.format(group)]
+            try:
+                group_data = ipa_utils.ipa_find(
+                        'group-find',
+                        group_find_args,
+                        all_fields=True
+                )[0]
+            except IpaRunError:
+                error = '{}: group not found'.format(group)
+                raise click.ClickException(error)
+
+            click.echo(
+                'Adjust the following fields as necessary:\n'
+                'Leave blank to keep current value shown within brackets'
+            )
+            params = {
+                'name': group,
+                'desc': click.prompt(
+                    '  Description',
+                    default=group_data['Description'][0]
+                )
+            }
+
+            wrapper = ipa_wrapper_command.create_ipa_wrapper(
+                'group-mod',
+                argument_name='name',
+                transform_options_callback=_validate_blacklist_groups
+            )
+            wrapper(**params)
+
     advanced_ipa_wrapper_commands = [
         ipa_wrapper_command.create(
             'create',
