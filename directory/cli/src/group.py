@@ -75,19 +75,20 @@ def add_commands(directory):
         pass
 
     # TODO duplication
-    @member.command(name='add', help='Add user(s) to a group')
-    @click.argument('group_name')
-    @click.argument('users', nargs=-1, required=True)
-    def add_member(group_name, users):
-        _validate_blacklist_groups(group_name, users)
-        user_options = ['--users={}'.format(user) for user in users]
-        ipa_command = 'group-add-member'
-        args = [group_name] + user_options
-        try:
-            ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
-            utils.display_success()
-        except IpaRunError:
-            _diagnose_member_command_error(group_name, users, add_command=True)
+    if utils.advanced_mode_enabled():
+        @member.command(name='add', help='Add user(s) to a group')
+        @click.argument('group_name')
+        @click.argument('users', nargs=-1, required=True)
+        def add_member(group_name, users):
+            _validate_blacklist_groups(group_name, users)
+            user_options = ['--users={}'.format(user) for user in users]
+            ipa_command = 'group-add-member'
+            args = [group_name] + user_options
+            try:
+                ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+                utils.display_success()
+            except IpaRunError:
+                _diagnose_member_command_error(group_name, users, add_command=True)
 
     @member.command(name='remove', help='Remove user(s) from a group')
     @click.argument('group_name')
@@ -158,6 +159,25 @@ def add_commands(directory):
                 argument_name='name',
             )
             wrapper(**params)
+
+        @member.command(name='add', help='Add user(s) to a group')
+        def add_member():
+            click.echo('Please enter the name of the group you wish to add to:')
+            group = click.prompt('  Group name')
+            _validate_blacklist_groups(group)
+
+            click.echo(
+                'Please enter the user(s) you wish to add to %s, separated by spaces:' % group
+            )
+            users = click.prompt('  User(s)').split()
+            user_options = ['--users={}'.format(user) for user in users]
+
+            args = [group] + user_options
+            try:
+                ipa_utils.ipa_run('group-add-member', args, error_in_stdout=True)
+                utils.display_success()
+            except IpaRunError:
+                _diagnose_member_command_error(group, users, add_command=True)
 
     advanced_ipa_wrapper_commands = [
         ipa_wrapper_command.create(
