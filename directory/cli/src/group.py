@@ -25,7 +25,15 @@ GROUP_OPTIONS = {
     '--desc': {'help': 'Group description'}
 }
 
-GROUP_BLACKLIST = ['ipausers', 'trust admins', 'adminusers', 'admins', 'editors']
+GROUP_BLACKLIST = [
+        'ipausers',
+        'trust admins',
+        'adminusers',
+        'admins',
+        'editors',
+        'clusterusers',
+        'alces-cluster'
+    ]
 
 def add_commands(directory):
 
