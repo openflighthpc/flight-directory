@@ -139,6 +139,8 @@ def add_commands(directory):
                 error = '{}: group not found'.format(group)
                 raise click.ClickException(error)
 
+            _validate_blacklist_groups(group)
+
             click.echo(
                 'Adjust the following fields as necessary:\n'
                 'Leave blank to keep current value shown within brackets'
@@ -154,7 +156,6 @@ def add_commands(directory):
             wrapper = ipa_wrapper_command.create_ipa_wrapper(
                 'group-mod',
                 argument_name='name',
-                transform_options_callback=_validate_blacklist_groups
             )
             wrapper(**params)
 

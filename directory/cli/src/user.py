@@ -115,6 +115,8 @@ def add_commands(directory):
                 error = '{}: user not found'.format(user)
                 raise click.ClickException(error)
 
+            _validate_blacklist_users(user)
+
             click.echo(
                 'Adjust the following fields as necessary:\n'
                 'Leave blank to keep current value shown within brackets'
