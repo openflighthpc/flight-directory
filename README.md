@@ -71,13 +71,13 @@ mkdir -p /var/www/html/secure
 - Create a user for managing IPA
 
 ```
-useradd -s /opt/directory/cli/bin/sandbox-starter ipaadmin
-passwd ipaadmin
+useradd -s /opt/directory/cli/bin/sandbox-starter useradmin
+passwd useradmin
 ```
 
 - Grant sudo permissions to the user
 
 ```
 sudoedit /etc/sudoers
-    ipaadmin ALL=(ALL) NOPASSWD:ALL
+    useradmin ALL=(ALL) NOPASSWD:ALL
 ```
