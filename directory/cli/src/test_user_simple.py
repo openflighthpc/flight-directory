@@ -4,8 +4,6 @@ from unittest import mock
 import directory
 import ipa_utils
 import test_utils
-import appliance_cli.utils
-from appliance_cli.testing_utils import click_run
 
 from click.testing import CliRunner
 
@@ -13,23 +11,12 @@ from click.testing import CliRunner
 def setUpModule():
     test_utils.reload_in_simple_mode()
 
-def test_user_create_calls_ipa_correctly(mocker):
-    _test_options_passed_to_ipa(
+def test_user_create_with_uid_calls_ipa_correctly(mocker):
+    test_utils.mock_ipa_find_output(mocker)
+    test_utils.mock_options_passed_to_ipa(
         mocker,
         ['user', 'create'],
-        'walterwhite\nWalter\nWhite\nheisenberg@example.com\nNo\n',
         [
-            (
-                'group-find',
-                [
-                    [
-                        'clusterusers',
-                        '--sizelimit', '0'
-                    ],
-                    None
-                ],
-                { 'record': False }
-            ),
             (
                 'user-add',
                 [
@@ -37,32 +24,46 @@ def test_user_create_calls_ipa_correctly(mocker):
                         'walterwhite',
                         '--email', 'heisenberg@example.com',
                         '--first', 'Walter',
+                        '--gidnumber', 'clusterusers_gid',
+                        '--last', 'White',
+                        '--random',
+                        '--uid', '9001'
+                    ]
+                ]
+            )
+        ],
+        'walterwhite\nWalter\nWhite\nheisenberg@example.com\nYes\n9001\n',
+    )
+
+def test_user_create_without_uid_calls_ipa_correctly(mocker):
+    test_utils.mock_ipa_find_output(mocker)
+    test_utils.mock_options_passed_to_ipa(
+        mocker,
+        ['user', 'create'],
+        [
+            (
+                'user-add',
+                [
+                    [
+                        'walterwhite',
+                        '--email', 'heisenberg@example.com',
+                        '--first', 'Walter',
+                        '--gidnumber', 'clusterusers_gid',
                         '--last', 'White',
                         '--random'
                     ]
                 ]
             )
-        ]
+        ],
+        'walterwhite\nWalter\nWhite\nheisenberg@example.com\nNo\n',
     )
 
-def test_user_modify_calls_ipa_correctly(mocker):
-    _test_options_passed_to_ipa(
+def test_user_modify_with_modifications_calls_ipa_correctly(mocker):
+    test_utils.mock_ipa_find_output(mocker)
+    test_utils.mock_options_passed_to_ipa(
         mocker,
         ['user', 'modify'],
-        'walterwhite\nWalt\nJackson\nnotheisenberg@example.com\nNo\n',
         [
-            (
-                'user-find',
-                [
-                    [
-                        '--login=walterwhite',
-                        '--all',
-                        '--sizelimit', '0'
-                    ],
-                    None
-                ],
-                { 'record': False }
-            ),
             (
                 'user-mod',
                 [
@@ -76,23 +77,32 @@ def test_user_modify_calls_ipa_correctly(mocker):
                     ]
                 ]
             )
-        ]
+        ],
+        'walterwhite\nWalt\nJackson\nnotheisenberg@example.com\nNo\n',
     )
 
-def _test_options_passed_to_ipa(mocker, directory_command, input_stream, ipa_run_arguments):
-    mocker.spy(ipa_utils, 'ipa_run')
+# We would expect this test to match the defaults mocked within
+# mock_ipa_find_output
+def test_user_modify_without_modifications_calls_ipa_correctly(mocker):
+    test_utils.mock_ipa_find_output(mocker)
+    test_utils.mock_options_passed_to_ipa(
+        mocker,
+        ['user', 'modify'],
+        [
+            (
+                'user-mod',
+                [
+                    [
+                        'walterwhite',
+                        '--cn', 'walterwhite_first walterwhite_last',
+                        '--displayname', 'walterwhite_first walterwhite_last',
+                        '--email', 'walterwhite_email',
+                        '--first', 'walterwhite_first',
+                        '--last', 'walterwhite_last'
+                    ]
+                ]
+            )
+        ],
+        'walterwhite\n\n\n\n\n'
+    )
 
-    click_run(directory.directory, directory_command, input=input_stream)
-
-    expected_ipa_calls = [mock_call(command_with_args) for command_with_args in ipa_run_arguments]
-    assert ipa_utils.ipa_run.call_args_list == expected_ipa_calls
-
-def mock_call(command_with_args):
-    command, args, *rest = command_with_args
-
-    try:
-        kwargs = rest[0]
-    except IndexError:
-        kwargs = {}
-
-    return mock.call(command, *args, **kwargs)

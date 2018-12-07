@@ -90,11 +90,6 @@ def add_commands(directory):
             ):
                 params = { **params, 'uid': click.prompt('  UID') }
 
-            group_id = _get_group_id('clusterusers')
-
-            if group_id:
-                params = { **params, 'gidnumber': group_id[0] }
-
             wrapper = ipa_wrapper_command.create_ipa_wrapper(
                 'user-add',
                 argument_name='login',
@@ -120,20 +115,23 @@ def add_commands(directory):
                 error = '{}: user not found'.format(user)
                 raise click.ClickException(error)
 
-            click.echo('Modifying user (%s)' % user)
+            click.echo(
+                'Adjust the following fields as necessary:\n'
+                'Leave blank to keep current value shown within brackets'
+            )
             params = {
                 'login': user,
                 'first': click.prompt(
                     '  First name',
-                    default=user_data.get('First name', 'empty')[0]
+                    default=user_data['First name'][0]
                 ),
                 'last': click.prompt(
                     '  Surname',
-                    default=user_data.get('Last name', 'empty')[0]
+                    default=user_data['Last name'][0]
                 ),
                 'email': click.prompt(
                     '  Email',
-                    default=user_data.get('Email address', 'empty')[0]
+                    default=user_data['Email address'][0]
                 )
             }
 
@@ -252,7 +250,6 @@ def _user_options(require_names=True):
         '--shell': {'help': 'Login shell'},
         '--email': {'help': 'Email address'},
         '--uid': {'help': 'User ID Number'},
-        '--gidnumber': {'help': 'Group ID Number'},
         '--key': {'help': 'SSH public key'},
         '--homedir': {'help': 'Home directory'},
         '--gecos': {'help': 'GECOS field'},
@@ -303,8 +300,10 @@ def _transform_options(argument, options):
 def _transform_create_options(argument, options):
     _validate_blacklist_users(argument)
     _validate_create_uid(options['uid'])
-    if options['gidnumber'] == None and utils.detect_user_config():
-        options['gidnumber'] = utils.get_user_config('DEFAULT_GID')
+
+    group_id = _get_group_id('clusterusers')
+    options['gidnumber'] = group_id
+
     if utils.get_password_policy():
         return OptionTransformer(argument, options).\
             rename_flag_option('make_password', 'random').\
@@ -479,12 +478,18 @@ def _run_post_create_script(login):
             raise IpaRunError(error) from ex
 
 def _get_group_id(group):
-    try:
-        return ipa_utils.ipa_find(
-            'group-find',
-            [group],
-            all_fields=False
-        )[0].get('GID')
-    except IpaRunError:
-        error = '{}: group not found'.format(group)
-        raise click.ClickException(error)
+    # If a default GID is set within the config this takes precedence
+    if utils.detect_user_config():
+        return utils.get_user_config('DEFAULT_GID')
+    else:
+        # If there is no config value set it attempts to set the GID to
+        # the 'clusterusers' group
+        try:
+            return ipa_utils.ipa_find(
+                'group-find',
+                [group],
+                all_fields=False
+            )[0].get('GID')[0]
+        except IpaRunError:
+            error = '{}: group not found'.format(group)
+            raise click.ClickException(error)
