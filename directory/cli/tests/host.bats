@@ -2,6 +2,7 @@
 
 DIRECTORY_CLI=bin/starter
 DIRECTORY_DIR=/opt/directory
+export ADVANCED=true
 
 setup() {
     source /opt/directory/etc/config && echo "$IPAPASSWORD" | kinit admin

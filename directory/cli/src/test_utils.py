@@ -31,10 +31,11 @@ def mock_ipa_find_output(mocker):
     def mock_ipa_find(ipa_command, ipa_args, *args, **kwargs):
         # Tests that expect to call group-find grab the mocked GID here
         if ipa_command == 'group-find':
-            group_name = ipa_args[0]
+            group_name = ipa_args[0].replace('--group-name=', '')
             return  [
                         {
-                            'GID': ['{}_gid'.format(group_name)]
+                            'GID': ['{}_gid'.format(group_name)],
+                            'Description': ['{}_desc'.format(group_name)]
                         }
                     ]
 
@@ -61,6 +62,16 @@ def mock_ipa_find_output(mocker):
 def _reload_with_advanced_set_to(val):
     os.environ['ADVANCED'] = val
     importlib.reload(directory)
+
+def mock_options_passed_to_ipa(mocker, directory_command, ipa_run_arguments, input_stream=None):
+    mocker.spy(ipa_utils, 'ipa_run')
+
+    click_run(directory.directory, directory_command, input=input_stream)
+
+    expected_ipa_calls = [
+        _mock_call(command_with_args) for command_with_args in ipa_run_arguments
+    ]
+    assert ipa_utils.ipa_run.call_args_list == expected_ipa_calls
 
 def _mock_call(command_with_args):
     command, args, *rest = command_with_args
