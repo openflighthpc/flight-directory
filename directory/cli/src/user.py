@@ -480,6 +480,9 @@ def _run_post_create_script(login):
             error = script_result.stdout if error_in_stdout else script_result.stderr
             raise IpaRunError(error) from ex
 
+def _standard_default_user_gid():
+    return utils.get_user_config('DEFAULT_GID') or _get_group_id('clusterusers')
+
 def _get_group_id(group):
     # If a default GID is set within the config this takes precedence
     if utils.detect_user_config():
