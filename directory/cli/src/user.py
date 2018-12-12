@@ -486,8 +486,9 @@ def _standard_default_user_gid():
     return utils.get_user_config('DEFAULT_GID') or _get_group_id('clusterusers')
 
 def _get_group_id(group):
-    # If there is no config value set it attempts to set the GID to
-    # the clusterusers group
+    # If present the clusterusers group now takes precedence.
+    # However as a last resort this will return None. This causes IPA to use
+    # its default.
     try:
         return ipa_utils.ipa_find(
             'group-find',
@@ -495,4 +496,7 @@ def _get_group_id(group):
             all_fields=False
         )[0].get('GID')[0]
     except IpaRunError:
+        # It might be worth adjusting this so that it only returns None when
+        # the group can't be found. Currently this will catch all IPA run
+        # errors which isn't ideal.
         return None
