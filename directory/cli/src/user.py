@@ -480,13 +480,14 @@ def _run_post_create_script(login):
             raise IpaRunError(error) from ex
 
 def _standard_default_user_gid():
+    # If a default GID is set within the config this takes precedence.
+    # However if this value is absent or blank it will attempt to find the GID
+    # of the clusterusers group
     return utils.get_user_config('DEFAULT_GID') or _get_group_id('clusterusers')
 
 def _get_group_id(group):
-    # These comments will be moved/replaced if this ends up working
-    # If a default GID is set within the config this takes precedence
         # If there is no config value set it attempts to set the GID to
-        # the 'clusterusers' group
+        # the clusterusers group
         try:
             return ipa_utils.ipa_find(
                 'group-find',
