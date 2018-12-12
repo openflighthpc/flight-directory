@@ -486,14 +486,14 @@ def _standard_default_user_gid():
     return utils.get_user_config('DEFAULT_GID') or _get_group_id('clusterusers')
 
 def _get_group_id(group):
-        # If there is no config value set it attempts to set the GID to
-        # the clusterusers group
-        try:
-            return ipa_utils.ipa_find(
-                'group-find',
-                [group],
-                all_fields=False
-            )[0].get('GID')[0]
-        except IpaRunError:
-            error = '{}: group not found'.format(group)
-            raise click.ClickException(error)
+    # If there is no config value set it attempts to set the GID to
+    # the clusterusers group
+    try:
+        return ipa_utils.ipa_find(
+            'group-find',
+            [group],
+            all_fields=False
+        )[0].get('GID')[0]
+    except IpaRunError:
+        error = '{}: group not found'.format(group)
+        raise click.ClickException(error)
