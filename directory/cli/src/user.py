@@ -304,8 +304,7 @@ def _transform_create_options(argument, options):
     _validate_blacklist_users(argument)
     _validate_create_uid(options['uid'])
 
-    group_id = _get_group_id('clusterusers')
-    options['gidnumber'] = group_id
+    options['gidnumber'] = _standard_default_user_gid()
 
     if utils.get_password_policy():
         return OptionTransformer(argument, options).\
@@ -484,10 +483,8 @@ def _standard_default_user_gid():
     return utils.get_user_config('DEFAULT_GID') or _get_group_id('clusterusers')
 
 def _get_group_id(group):
+    # These comments will be moved/replaced if this ends up working
     # If a default GID is set within the config this takes precedence
-    if utils.detect_user_config():
-        return utils.get_user_config('DEFAULT_GID')
-    else:
         # If there is no config value set it attempts to set the GID to
         # the 'clusterusers' group
         try:
