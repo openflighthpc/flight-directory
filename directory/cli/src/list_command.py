@@ -77,7 +77,7 @@ def do(
     # Remove blacklisted items
     if blacklist_key:
         item_dicts = [item_dict for item_dict in item_dicts if item_dict[blacklist_key][0] not in blacklist_val_array]
-        
+
     if sort_key:
         item_dicts.sort(key=itemgetter(sort_key))
 
@@ -149,3 +149,4 @@ def host_with_ip(field_name, item_dict, additional_data):
         return [socket.gethostbyname(item_dict['Host name'][0])]
     except (socket.gaierror, socket.herror):
         return [None]
+

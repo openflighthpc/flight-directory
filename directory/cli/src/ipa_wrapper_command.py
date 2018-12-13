@@ -3,22 +3,26 @@ import click
 import ipa_utils
 import utils
 import os
+from collections import defaultdict
 
+def _default_transform_options_callback(argument, options):
+    return options
+
+def _default_handle_result_callback(argument, options, result):
+    return None
 
 # TODO: consider using new wrapper_command stuff for this has been written; is
 # more flexible.
-
-
 def create(
         command_name,
         ipa_command=None,
         argument_name=None,
         help='',
         options={},
-        transform_options_callback=lambda argument, options: options,
-        handle_result_callback=lambda argument, options, result: None,
+        transform_options_callback=_default_transform_options_callback,
+        handle_result_callback=_default_handle_result_callback
 ):
-    
+
     if not all([ipa_command, argument_name]):
         raise TypeError
 
@@ -29,13 +33,13 @@ def create(
     ]
     params = [argument] + options
 
-    ipa_wrapper = _create_ipa_wrapper(
+    ipa_wrapper = create_ipa_wrapper(
         ipa_command,
         argument_name=argument_name,
         transform_options_callback=transform_options_callback,
         handle_result_callback=handle_result_callback
     )
-	
+
     return click.Command(
         command_name,
         callback=ipa_wrapper,
@@ -44,14 +48,18 @@ def create(
     )
 
 
-def _create_ipa_wrapper(
+def create_ipa_wrapper(
         ipa_command,
         argument_name=None,
-        transform_options_callback=None,
-        handle_result_callback=None,
+        transform_options_callback=_default_transform_options_callback,
+        handle_result_callback=_default_handle_result_callback
 ):
     def ipa_wrapper(**validated_params):
-	
+        # This method is called by both Click as a callback and manually for the simple commands.
+        # Using a defaultdict allows for handling these params in the same way regardless of
+        # how this method is called.
+        validated_params = defaultdict(lambda: None, validated_params)
+
         # Get argument if present; the other params are options.
         argument = validated_params.pop(argument_name)
 
@@ -59,7 +67,7 @@ def _create_ipa_wrapper(
         #   is being replaced with an underscore
         # I couldn't work out why so this is a messy fix for the time being
         if 'ip_address' in validated_params:
-            validated_params['ip-address'] = validated_params['ip_address'] 
+            validated_params['ip-address'] = validated_params['ip_address']
             del validated_params['ip_address']
 
         options = validated_params
@@ -69,11 +77,11 @@ def _create_ipa_wrapper(
             options=options,
             transform_options_callback=transform_options_callback
         )
-        
+
         # if the command is modify host & there's only one item in the args list it's neccesary not to call
         #   the ipa command as a) the option to modify it wouldn't do anything anyway and b) it would result
         #   in a spurious error message if the --ip-address option has been removed in transform_options_callback
-        if not (ipa_command == "host-mod" and len(args) == 1): 
+        if not (ipa_command == "host-mod" and len(args) == 1):
             # want to check if attempting user-add with creation script but that script isn't usable
             #   before completing the user-add
             if (ipa_command == "user-add" and utils.get_user_config('POST_CREATE_SCRIPT') \
