@@ -37,6 +37,16 @@ def log_cmd(args, error=None):
     row = [cmd] + args
     write_to_log(row)
 
+def log_simple_cmd(params):
+    cmd = utils.original_command()
+    row = [cmd]
+
+    for key, value in params.items():
+        string = '{0}: {1}'.format(key, value)
+        row.append(string)
+
+    write_to_log(row)
+
 def write_to_log(row):
     time = str(datetime.datetime.now().replace(microsecond=0))
 
