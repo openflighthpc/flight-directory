@@ -149,6 +149,7 @@ def add_commands(directory):
                 'Adjust the following fields as necessary:\n'
                 'Leave blank to keep current value shown within brackets'
             )
+
             params = OrderedDict([
                 ('name', group),
                 ('desc', click.prompt(
