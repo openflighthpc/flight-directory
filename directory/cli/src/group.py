@@ -7,6 +7,7 @@ from list_command import field_with_same_name
 import ipa_wrapper_command
 import ipa_utils
 import utils
+import logger
 from exceptions import IpaRunError
 
 
@@ -125,6 +126,8 @@ def add_commands(directory):
             )
             wrapper(**params)
 
+            logger.log_simple_cmd(params)
+
         @group.command(name='modify', help='Modify an existing group')
         def modify():
             click.echo('Please enter the name of the group you want to modify:')
@@ -160,6 +163,8 @@ def add_commands(directory):
             )
             wrapper(**params)
 
+            logger.log_simple_cmd(params)
+
         @member.command(name='add', help='Add user(s) to a group')
         def add_member():
             click.echo('Please enter the name of the group you wish to add to:')
@@ -178,6 +183,8 @@ def add_commands(directory):
                 utils.display_success()
             except IpaRunError:
                 _diagnose_member_command_error(group, users, add_command=True)
+
+            logger.log_cmd(args)
 
     advanced_ipa_wrapper_commands = [
         ipa_wrapper_command.create(

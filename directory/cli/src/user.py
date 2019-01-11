@@ -13,6 +13,7 @@ import appliance_cli.text as text
 import appliance_cli.utils
 import utils
 import subprocess
+import logger
 from exceptions import IpaRunError
 from option_transformer import OptionTransformer
 
@@ -98,6 +99,8 @@ def add_commands(directory):
             )
             wrapper(**params)
 
+            logger.log_simple_cmd(params)
+
         @user.command(help='Modify an existing user')
         def modify():
             click.echo('Please enter the name of the user you want to modify:')
@@ -145,6 +148,8 @@ def add_commands(directory):
                 handle_result_callback=_handle_modify_result,
             )
             wrapper(**params)
+
+            logger.log_simple_cmd(params)
 
     base_ipa_wrapper_commands = [
         ipa_wrapper_command.create(
