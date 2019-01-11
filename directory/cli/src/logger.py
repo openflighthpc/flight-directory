@@ -4,7 +4,7 @@ import csv
 import re
 
 import utils
-from config import CONFIG 
+from config import CONFIG
 
 def log_cmd(args, error=None):
     if not error==None:
