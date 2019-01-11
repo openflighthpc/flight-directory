@@ -4,7 +4,7 @@ import csv
 import re
 
 import utils
-from config import CONFIG 
+from config import CONFIG
 
 def log_cmd(args, error=None):
     if not error==None:
@@ -35,6 +35,16 @@ def log_cmd(args, error=None):
             cmd = re.sub(r'(?<= --password( |=)).*(?=$)', '********', cmd)
 
     row = [cmd] + args
+    write_to_log(row)
+
+def log_simple_cmd(params):
+    cmd = utils.original_command()
+    row = [cmd]
+
+    for key, value in params.items():
+        string = '{0}: {1}'.format(key, value)
+        row.append(string)
+
     write_to_log(row)
 
 def write_to_log(row):
