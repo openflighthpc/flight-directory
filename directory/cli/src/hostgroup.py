@@ -2,7 +2,7 @@ import click
 from collections import OrderedDict
 
 import list_command
-from list_command import field_with_same_name    	
+from list_command import field_with_same_name
 import ipa_wrapper_command
 import ipa_utils
 import utils
@@ -42,7 +42,7 @@ def add_commands(directory):
             blacklist_key='Host-group',
             blacklist_val_array=HOSTGROUP_BLACKLIST,
         )
-	
+
     @hostgroup.command(help='Show detailed information on one host group')
     @click.argument('hostgroup_name')
     def show(hostgroup_name):
