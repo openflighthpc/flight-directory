@@ -121,7 +121,7 @@ Optionally, ignore all arguments to input using REPL mode
                 transform_options_callback=_validate_blacklist_groups
             )
 
-            if all(p is not None for p in [name, desc]):
+            if all(a is not None for a in [name, desc]):
                 params = OrderedDict([
                     ('name', name),
                     ('desc', desc)
@@ -163,7 +163,7 @@ Optionally, ignore all arguments to input using REPL mode.
                 argument_name='name',
             )
 
-            if all(p is not None for p in args.values()):
+            if all(a is not None for a in args.values()):
                 _validate_blacklist_groups(args['name'])
                 params = OrderedDict([])
                 for arg, value in args.items():

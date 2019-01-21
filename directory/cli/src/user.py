@@ -94,7 +94,7 @@ Optionally, ignore all arguments to input using REPL mode.
                 handle_result_callback=_handle_create_result,
             )
 
-            if all(p is not None for p in [login, first, last, email]):
+            if all(a is not None for a in [login, first, last, email]):
                 params = OrderedDict([
                             ('login', login),
                             ('first', first),
@@ -144,7 +144,7 @@ Optionally, ignore all arguments to input using REPL mode.
                 handle_result_callback=_handle_modify_result,
             )
 
-            if all(p is not None for p in args.values()):
+            if all(a is not None for a in args.values()):
                 _validate_blacklist_users(args['login'])
                 params = OrderedDict([])
                 for arg, value in args.items():
