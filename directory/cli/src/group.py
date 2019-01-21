@@ -107,24 +107,24 @@ def add_commands(directory):
 
     if not utils.advanced_mode_enabled():
         @click.argument('GID', required=False)
-        @click.argument('Description', required=False)
+        @click.argument('desc', required=False)
         @click.argument('Name', required=False)
         @group.command(name='create', help="""
 Create a new group.
 
 Optionally, ignore all arguments to input using REPL mode
         """.strip())
-        def create(name, description, gid):
+        def create(name, desc, gid):
             wrapper = ipa_wrapper_command.create_ipa_wrapper(
                 'group-add',
                 argument_name='name',
                 transform_options_callback=_validate_blacklist_groups
             )
 
-            if all(p is not None for p in [name, description]):
+            if all(p is not None for p in [name, desc]):
                 params = OrderedDict([
                     ('name', name),
-                    ('desc', description)
+                    ('desc', desc)
                 ])
                 if gid: params = { **params, 'gid': gid }
             elif name is not None:
