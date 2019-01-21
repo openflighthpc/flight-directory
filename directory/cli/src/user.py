@@ -106,7 +106,7 @@ Optionally, ignore all arguments to input using REPL mode.
                 error = """
 Please provide a login, a first name, a last name and an email.
 Optionally a UID can also be provided, otherwise one will be auto-generated.
-Leave all fields blank to enter REPL mode."""
+Leave all fields blank to enter REPL mode.""".strip()
                 raise click.ClickException(error)
             else:
                 click.echo('Please enter details for the following:')
