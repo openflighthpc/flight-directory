@@ -186,6 +186,12 @@ Please enter the name of the user you want to modify:
                     'Leave blank to keep current value shown within brackets'
                 )
 
+                ssh_key_list = user_data.get('SSH public key')
+                if ssh_key_list:
+                    ssh_key_default = ssh_key_list[0]
+                else:
+                    ssh_key_default = 'None'
+
                 params = OrderedDict([
                     ('login', user),
                     ('first', click.prompt(
@@ -199,6 +205,10 @@ Please enter the name of the user you want to modify:
                     ('email', click.prompt(
                         '  Email',
                         default=user_data['Email address'][0]
+                    )),
+                    ('key', click.prompt(
+                        '  SSH public key',
+                        default=ssh_key_default
                     ))
                 ])
 
