@@ -52,7 +52,7 @@ def _info_section_boundary(line):
 
 
 def _process_delimited_find_output_line(line):
-    key, raw_value = _strip_all(line.split(FIND_OUTPUT_DELIMITER))
+    key, raw_value = _strip_all(line.split(FIND_OUTPUT_DELIMITER, 1))
 
     if key in RAW_FIELD_WHITELIST:
         # Wrap in list for consistency with other values.
