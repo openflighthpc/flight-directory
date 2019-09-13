@@ -23,7 +23,8 @@ GROUP_SHOW_FIELD_CONFIGS.update([
 ])
 
 GROUP_OPTIONS = {
-    '--desc': {'help': 'Group description'}
+    '--desc': {'help': 'Group description'},
+    '--gid': {'help': 'Group ID Number'},
 }
 
 GROUP_BLACKLIST = [
