@@ -497,6 +497,7 @@ def _handle_modify_result(login, options, result):
 
 
 def _handle_delete_result(login, options, result):
+    utils.run_post_command_script('POST_DELETE_SCRIPT', login)
     _handle_removed_password(login, options, result)
 
 
