@@ -89,6 +89,7 @@ def add_commands(directory):
             try:
                 ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
                 utils.display_success()
+                utils.run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
             except IpaRunError:
                 _diagnose_member_command_error(group_name, users, add_command=True)
 
@@ -103,6 +104,7 @@ def add_commands(directory):
         try:
             ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
             utils.display_success()
+            utils.run_post_command_script('POST_MEMBER_REMOVE_SCRIPT', users)
         except IpaRunError:
             _diagnose_member_command_error(group_name, users, add_command=False)
 
@@ -225,6 +227,7 @@ Leave all fields blank to be prompted for values.""".strip()
             try:
                 ipa_utils.ipa_run('group-add-member', args, error_in_stdout=True)
                 utils.display_success()
+                utils.run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
             except IpaRunError:
                 _diagnose_member_command_error(group, users, add_command=True)
 
