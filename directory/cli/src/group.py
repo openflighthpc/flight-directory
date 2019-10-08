@@ -314,3 +314,24 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
 
     error = "Unknown error"
     raise click.ClickException(error)
+
+def run_post_command_script(command, users):
+    script_location = utils.get_user_config(command)
+
+    if script_location:
+        try:
+            script_result = subprocess.run([script_location, users], check=True)
+        except PermissionError:
+            raise click.ClickException(
+                "Cannot execute post command script - you need permissions to execute '{}'."
+                .format(script_location)
+            )
+        except OSError:
+            raise click.ClickException(
+                "Userware is unable to execute the script at '{}' ".format(script_location) + \
+                "- please check the script exists and that it has a shebang line at its start"
+            )
+        except subprocess.CalledProcessError as ex:
+            error = script_result.stdout if error_in_stdout else script_result.stderr
+            raise IpaRunError(error) from ex
+
