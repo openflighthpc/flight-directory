@@ -318,12 +318,12 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
     error = "Unknown error"
     raise click.ClickException(error)
 
-def _run_post_command_script(command, users):
+def _run_post_command_script(command, args):
     script_location = utils.get_user_config(command)
 
     if script_location:
         try:
-            script_result = subprocess.run([script_location, users], check=True)
+            script_result = subprocess.run([script_location, args], check=True)
         except PermissionError:
             raise click.ClickException(
                 "Cannot execute post command script - you need permissions to execute '{}'."
