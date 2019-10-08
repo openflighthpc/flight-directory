@@ -93,20 +93,20 @@ def add_commands(directory):
             except IpaRunError:
                 _diagnose_member_command_error(group_name, users, add_command=True)
 
-    @member.command(name='remove', help='Remove user(s) from a group')
-    @click.argument('group_name')
-    @click.argument('users', nargs=-1, required=True)
-    def remove_member(group_name, users):
-        _validate_blacklist_groups(group_name, users)
-        user_options = ['--users={}'.format(user) for user in users]
-        ipa_command = 'group-remove-member'
-        args = [group_name] + user_options
-        try:
-            ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
-            utils.display_success()
-            utils.run_post_command_script('POST_MEMBER_REMOVE_SCRIPT', users)
-        except IpaRunError:
-            _diagnose_member_command_error(group_name, users, add_command=False)
+        @member.command(name='remove', help='Remove user(s) from a group')
+        @click.argument('group_name')
+        @click.argument('users', nargs=-1, required=True)
+        def remove_member(group_name, users):
+            _validate_blacklist_groups(group_name, users)
+            user_options = ['--users={}'.format(user) for user in users]
+            ipa_command = 'group-remove-member'
+            args = [group_name] + user_options
+            try:
+                ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
+                utils.display_success()
+                utils.run_post_command_script('POST_MEMBER_REMOVE_SCRIPT', users)
+            except IpaRunError:
+                _diagnose_member_command_error(group_name, users, add_command=False)
 
     if not utils.advanced_mode_enabled():
         @click.argument('GID', required=False)
