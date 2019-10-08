@@ -89,7 +89,7 @@ def add_commands(directory):
             try:
                 ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
                 utils.display_success()
-                _run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
+                utils.run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
             except IpaRunError:
                 _diagnose_member_command_error(group_name, users, add_command=True)
 
@@ -104,7 +104,7 @@ def add_commands(directory):
         try:
             ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
             utils.display_success()
-            _run_post_command_script('POST_MEMBER_REMOVE_SCRIPT', users)
+            utils.run_post_command_script('POST_MEMBER_REMOVE_SCRIPT', users)
         except IpaRunError:
             _diagnose_member_command_error(group_name, users, add_command=False)
 
@@ -227,7 +227,7 @@ Leave all fields blank to be prompted for values.""".strip()
             try:
                 ipa_utils.ipa_run('group-add-member', args, error_in_stdout=True)
                 utils.display_success()
-                _run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
+                utils.run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
             except IpaRunError:
                 _diagnose_member_command_error(group, users, add_command=True)
 
@@ -317,24 +317,3 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
 
     error = "Unknown error"
     raise click.ClickException(error)
-
-def _run_post_command_script(command, args):
-    script_location = utils.get_user_config(command)
-
-    if script_location:
-        try:
-            script_result = subprocess.run([script_location, args], check=True)
-        except PermissionError:
-            raise click.ClickException(
-                "Cannot execute post command script - you need permissions to execute '{}'."
-                .format(script_location)
-            )
-        except OSError:
-            raise click.ClickException(
-                "Userware is unable to execute the script at '{}' ".format(script_location) + \
-                "- please check the script exists and that it has a shebang line at its start"
-            )
-        except subprocess.CalledProcessError as ex:
-            error = script_result.stdout if error_in_stdout else script_result.stderr
-            raise IpaRunError(error) from ex
-

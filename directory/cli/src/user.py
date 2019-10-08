@@ -486,7 +486,7 @@ def _extra_name_options(first_name, last_name):
 
 
 def _handle_create_result(login, options, result):
-    _run_post_create_script(login)
+    utils.run_post_command_script('POST_CREATE_SCRIPT', login)
     _handle_new_temporary_password(login, options, result)
 
 
@@ -523,26 +523,6 @@ def _handle_new_temporary_password(login, options, result):
 def _handle_removed_password(login, options, result):
     if utils.currently_importing():
         utils.remove_imported_user_entry(login)
-
-def _run_post_create_script(login):
-    script_location = utils.get_user_config('POST_CREATE_SCRIPT')
-
-    if script_location:
-        try:
-            script_result = subprocess.run([script_location, login], check=True)
-        except PermissionError:
-            raise click.ClickException(
-                "Cannot execute post user creation script - you need permissions to execute '{}'."
-                .format(script_location)
-            )
-        except OSError:
-            raise click.ClickException(
-                "Userware is unable to execute the script at '{}' ".format(script_location) + \
-                "- please check the script exists and that it has a shebang line at its start"
-            )
-        except subprocess.CalledProcessError as ex:
-            error = script_result.stdout if error_in_stdout else script_result.stderr
-            raise IpaRunError(error) from ex
 
 def _standard_default_user_gid():
     # If a default GID is set within the config this takes precedence.
