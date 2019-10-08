@@ -89,7 +89,7 @@ def add_commands(directory):
             try:
                 ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
                 utils.display_success()
-                run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
+                _run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
             except IpaRunError:
                 _diagnose_member_command_error(group_name, users, add_command=True)
 
@@ -104,7 +104,7 @@ def add_commands(directory):
         try:
             ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
             utils.display_success()
-            run_post_command_script('POST_MEMBER_REMOVE_SCRIPT', users)
+            _run_post_command_script('POST_MEMBER_REMOVE_SCRIPT', users)
         except IpaRunError:
             _diagnose_member_command_error(group_name, users, add_command=False)
 
@@ -227,7 +227,7 @@ Leave all fields blank to be prompted for values.""".strip()
             try:
                 ipa_utils.ipa_run('group-add-member', args, error_in_stdout=True)
                 utils.display_success()
-                run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
+                _run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
             except IpaRunError:
                 _diagnose_member_command_error(group, users, add_command=True)
 
@@ -318,7 +318,7 @@ def _diagnose_member_command_error(group_name, users, add_command=False):
     error = "Unknown error"
     raise click.ClickException(error)
 
-def run_post_command_script(command, users):
+def _run_post_command_script(command, users):
     script_location = utils.get_user_config(command)
 
     if script_location:
