@@ -114,7 +114,6 @@ def advanced_mode_enabled():
 
 def run_post_command_script(command, args):
     script_location = get_user_config(command)
-    print("Running: ", command, " for ", args)
 
     if script_location:
         try:
