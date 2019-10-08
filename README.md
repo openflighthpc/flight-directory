@@ -59,7 +59,11 @@ echo 'cw_ACCESS_fqdn=infra01.testnet.alces.network' > /opt/directory/etc/access.
 cat << EOF > /opt/directory/etc/user_config
 DO_NOT_GENERATE_PASSWORD=TRUE
 DEFAULT_GID=987654321
+
 POST_CREATE_SCRIPT=/path/to/myscript.sh
+POST_DELETE_SCRIPT=^^
+POST_MEMBER_ADD_SCRIPT=^^
+POST_MEMBER_REMOVE_SCRIPT=^^
 ```
 
 - Create output directory for export
