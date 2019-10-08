@@ -233,6 +233,27 @@ Leave all fields blank to be prompted for values.""".strip()
 
             logger.log_cmd(args)
 
+        @member.command(name='remove', help='Remove user(s) from a group')
+        def remove_member():
+            click.echo('Please enter the name of the group you wish to remove from:')
+            group = click.prompt('  Group name')
+            _validate_blacklist_groups(group)
+
+            click.echo(
+                'Please enter the user(s) you wish to remove from %s, separated'
+                ' by spaces:' % group
+            )
+            users = click.prompt('  User(s)').split()
+            user_options = ['--users={}'.format(user) for user in users]
+
+            args = [group] + user_options
+            try:
+                ipa_utils.ipa_run('group-remove-member', args, error_in_stdout=True)
+                utils.display_success()
+                utils.run_post_command_script('POST_MEMBER_REMOVE_SCRIPT', users)
+            except IpaRunError:
+                _diagnose_member_command_error(group, users, add_command=False)
+
     advanced_ipa_wrapper_commands = [
         ipa_wrapper_command.create(
             'create',
