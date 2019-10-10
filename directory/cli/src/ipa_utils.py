@@ -70,7 +70,7 @@ def _strip_all(strings):
 
 
 def ipa_run(ipa_command, args=[], error_allowed=None, error_in_stdout=False, record=True):
-    command = ['ipa', '--no-prompt'] + [ipa_command] + args
+    command = [CONFIG.IPA_WRAPPER_SCRIPT_PATH] + [ipa_command] + args
 
     try:
         result = appliance_cli.utils.run(command)
