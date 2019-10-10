@@ -21,6 +21,10 @@ Currently this repository is just a collection of the code from [Imageware](http
 
 Note: This does not setup an IPA server, that must be done separately. For more information on setting up an IPA server see the [Cluster Platform Knowledgebase instructions](http://cluster-platform-knowledgebase.readthedocs.io/en/latest/user-management/user-management-guidelines.html#ipa-server-setup)
 
+- Install dependencies
+
+`yum install apg` (Required for `password-generator` script)
+
 - Clone the repository
 
 ```
