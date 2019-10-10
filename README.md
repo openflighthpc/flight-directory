@@ -23,7 +23,10 @@ Note: This does not setup an IPA server, that must be done separately. For more 
 
 - Install dependencies
 
-`yum install apg` (Required for `password-generator` script)
+```
+yum install apg
+``` 
+(Required for `password-generator` script)
 
 - Clone the repository
 
