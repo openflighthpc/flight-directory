@@ -328,6 +328,9 @@ def _create_options():
     if utils.get_password_policy():
         return {
             **_user_options(),
+            '--group': {
+                'help': 'Specify a group to assign the user to on creation'
+            },
             '--make-password': {
                 'help': 'Generate a temporary password',
                 'is_flag': True,
@@ -336,6 +339,9 @@ def _create_options():
     else:
         return {
             **_user_options(),
+            '--group': {
+                'help': 'Specify a group to assign the user to on creation'
+            },
             '--no-password': {
                 'help': 'Do not generate temporary password',
                 'is_flag': True,
@@ -381,7 +387,6 @@ def _transform_create_options(argument, options):
             rename_and_invert_flag_option('no_password', 'random').\
             rename_option('key', 'sshpubkey').\
             options
-
 
 def _validate_create_uid(uid):
     if not uid:
