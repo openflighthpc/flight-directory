@@ -55,6 +55,7 @@ _DIRECTORY_CONFIG = {
         'command-line access via SSH and full access to FreeIPA.'
     ),
     'SUPPORT_EJECT_SUCCESS_MESSAGE_CALLBACK': _support_eject_success_message,
+    'IPA_WRAPPER_SCRIPT_PATH': join(_STANDARD_CONFIG['APPLIANCE_DIR'], 'libexec/userware-ipa-wrapper')
 }
 
 CONFIG = appliance_cli.config.finalize_config(
