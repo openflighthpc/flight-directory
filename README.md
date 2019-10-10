@@ -21,6 +21,13 @@ Currently this repository is just a collection of the code from [Imageware](http
 
 Note: This does not setup an IPA server, that must be done separately. For more information on setting up an IPA server see the [Cluster Platform Knowledgebase instructions](http://cluster-platform-knowledgebase.readthedocs.io/en/latest/user-management/user-management-guidelines.html#ipa-server-setup)
 
+- Install dependencies
+
+```
+yum install apg
+``` 
+(Required for `password-generator` script)
+
 - Clone the repository
 
 ```
@@ -59,7 +66,11 @@ echo 'cw_ACCESS_fqdn=infra01.testnet.alces.network' > /opt/directory/etc/access.
 cat << EOF > /opt/directory/etc/user_config
 DO_NOT_GENERATE_PASSWORD=TRUE
 DEFAULT_GID=987654321
-POST_CREATE_SCRIPT=/path/to/myscript.sh
+
+POST_CREATE_SCRIPT=/path/to/post-create-script.sh
+POST_DELETE_SCRIPT=/path/to/post-delete-script.sh
+POST_MEMBER_ADD_SCRIPT=/path/to/post-member-add-script.sh
+POST_MEMBER_REMOVE_SCRIPT=/path/to/post-member-remove-script.sh
 ```
 
 - Create output directory for export

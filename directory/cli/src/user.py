@@ -328,6 +328,9 @@ def _create_options():
     if utils.get_password_policy():
         return {
             **_user_options(),
+            '--group': {
+                'help': 'Specify a group to assign the user to on creation'
+            },
             '--make-password': {
                 'help': 'Generate a temporary password',
                 'is_flag': True,
@@ -336,6 +339,9 @@ def _create_options():
     else:
         return {
             **_user_options(),
+            '--group': {
+                'help': 'Specify a group to assign the user to on creation'
+            },
             '--no-password': {
                 'help': 'Do not generate temporary password',
                 'is_flag': True,
@@ -381,7 +387,6 @@ def _transform_create_options(argument, options):
             rename_and_invert_flag_option('no_password', 'random').\
             rename_option('key', 'sshpubkey').\
             options
-
 
 def _validate_create_uid(uid):
     if not uid:
@@ -486,7 +491,7 @@ def _extra_name_options(first_name, last_name):
 
 
 def _handle_create_result(login, options, result):
-    _run_post_create_script(login)
+    utils.run_post_command_script('POST_CREATE_SCRIPT', login)
     _handle_new_temporary_password(login, options, result)
 
 
@@ -497,6 +502,7 @@ def _handle_modify_result(login, options, result):
 
 
 def _handle_delete_result(login, options, result):
+    utils.run_post_command_script('POST_DELETE_SCRIPT', login)
     _handle_removed_password(login, options, result)
 
 
@@ -523,26 +529,6 @@ def _handle_new_temporary_password(login, options, result):
 def _handle_removed_password(login, options, result):
     if utils.currently_importing():
         utils.remove_imported_user_entry(login)
-
-def _run_post_create_script(login):
-    script_location = utils.get_user_config('POST_CREATE_SCRIPT')
-
-    if script_location:
-        try:
-            script_result = subprocess.run([script_location, login], check=True)
-        except PermissionError:
-            raise click.ClickException(
-                "Cannot execute post user creation script - you need permissions to execute '{}'."
-                .format(script_location)
-            )
-        except OSError:
-            raise click.ClickException(
-                "Userware is unable to execute the script at '{}' ".format(script_location) + \
-                "- please check the script exists and that it has a shebang line at its start"
-            )
-        except subprocess.CalledProcessError as ex:
-            error = script_result.stdout if error_in_stdout else script_result.stderr
-            raise IpaRunError(error) from ex
 
 def _standard_default_user_gid():
     # If a default GID is set within the config this takes precedence.
