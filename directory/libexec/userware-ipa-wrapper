@@ -1,0 +1,55 @@
+#!/bin/bash
+dir="$(cd $(dirname "$0") && pwd)"
+cmd=$1
+case $cmd in
+    user-add)
+	if [[ "$* " == *" --group "* || "$*" == *" --random "* ]]; then
+	    uname=$2
+	    args=()
+	    for a in "$@"; do
+		if [ "$a" == "--random" ]; then
+		    if [ -x "${dir}"/password-generator ]; then
+			password="$("${dir}"/password-generator)"
+		    else
+			args+=($a)
+		    fi
+		elif [ "$a" == "--group" ]; then
+		    grab_group=true
+		elif [ "$grab_group" ]; then
+		    group="$a"
+		    unset grab_group
+		else
+		    args+=($a)
+		fi
+	    done
+	    tmpf=$(mktemp /tmp/userware-ipa-wrapper.XXXXXXX)
+	    ipa --no-prompt "${args[@]}" > $tmpf
+	    rc=$?
+	    if [ $rc == 0 -a -n "$group" ]; then
+		ipa --no-prompt group-add-member $group --users=$uname &>/dev/null
+		rc=$?
+		if [ $rc != 0 ]; then
+		    ipa user-del $uname &>/dev/null
+		fi
+	    fi
+	    if [ $rc == 0 -a -n "${password}" ]; then
+		echo "${password}" | ipa passwd $uname &>/dev/null
+		rc=$?
+		if [ $rc != 0 ]; then
+		    ipa user-del $uname &>/dev/null
+		else
+		    sed -i 's/^Password: False/Password: true/g' $tmpf
+		    echo "  Random password: ${password}" >> $tmpf
+		fi
+	    fi
+	    cat $tmpf 
+	    rm -f $tmpf
+	    exit $rc
+	else
+	    exec ipa --no-prompt "$@"
+	fi
+	;;
+    *)
+	exec ipa --no-prompt "$@"
+	;;
+esac
