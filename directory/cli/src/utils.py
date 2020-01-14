@@ -36,6 +36,8 @@ import appliance_cli
 from os import getenv
 from exceptions import IpaRunError
 
+import subprocess
+
 def obtain_kerberos_ticket():
     # TODO: apparently this is a bad idea, consider using keytab - refer to:
     # http://stackoverflow.com/questions/8144596/kerberos-kinit-enter-password-without-prompt.
