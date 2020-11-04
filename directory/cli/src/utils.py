@@ -158,5 +158,5 @@ def run_post_command_script(command, args):
                 "- please check the script exists and that it has a shebang line at its start"
             )
         except subprocess.CalledProcessError as ex:
-            error = script_result.stdout if error_in_stdout else script_result.stderr
-            raise IpaRunError(error) from ex
+            error = "The script at {} failed to execute correctly".format(script_location)
+            raise click.ClickException(error) from ex
