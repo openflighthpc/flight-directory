@@ -517,7 +517,7 @@ def _extra_name_options(first_name, last_name):
 
 
 def _handle_create_result(login, options, result):
-    utils.run_post_command_script('POST_CREATE_SCRIPT', login)
+    utils.run_post_command_script('POST_CREATE_SCRIPT', [login])
     _handle_new_temporary_password(login, options, result)
 
 
@@ -528,7 +528,7 @@ def _handle_modify_result(login, options, result):
 
 
 def _handle_delete_result(login, options, result):
-    utils.run_post_command_script('POST_DELETE_SCRIPT', login)
+    utils.run_post_command_script('POST_DELETE_SCRIPT', [login])
     _handle_removed_password(login, options, result)
 
 
