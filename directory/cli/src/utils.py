@@ -142,10 +142,11 @@ def advanced_mode_enabled():
 
 def run_post_command_script(command, args):
     script_location = get_user_config(command)
+    args.insert(0, script_location)
 
     if script_location:
         try:
-            script_result = subprocess.run([script_location, args], check=True)
+            script_result = subprocess.run(args, check=True)
         except PermissionError:
             raise click.ClickException(
                 "Cannot execute post command script - you need permissions to execute '{}'."
@@ -159,4 +160,3 @@ def run_post_command_script(command, args):
         except subprocess.CalledProcessError as ex:
             error = script_result.stdout if error_in_stdout else script_result.stderr
             raise IpaRunError(error) from ex
-
