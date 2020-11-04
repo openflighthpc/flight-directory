@@ -35,7 +35,7 @@ import ipa_utils
 import utils
 import logger
 from exceptions import IpaRunError
-
+import builtins
 
 GROUP_LIST_FIELD_CONFIGS = OrderedDict([
     ('Group name', field_with_same_name),
@@ -115,7 +115,7 @@ def add_commands(directory):
             try:
                 ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
                 utils.display_success()
-                utils.run_post_command_script('POST_MEMBER_ADD_SCRIPT', users)
+                utils.run_post_command_script('POST_MEMBER_ADD_SCRIPT', builtins.list(users))
             except IpaRunError:
                 _diagnose_member_command_error(group_name, users, add_command=True)
 
@@ -130,7 +130,7 @@ def add_commands(directory):
             try:
                 ipa_utils.ipa_run(ipa_command, args, error_in_stdout=True)
                 utils.display_success()
-                utils.run_post_command_script('POST_MEMBER_REMOVE_SCRIPT', users)
+                utils.run_post_command_script('POST_MEMBER_REMOVE_SCRIPT', builtins.list(users))
             except IpaRunError:
                 _diagnose_member_command_error(group_name, users, add_command=False)
 
