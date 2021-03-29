@@ -5,7 +5,7 @@ pexpect==4.2.1
 pickleshare==0.7.4
 ptyprocess==0.5.1
 py==1.4.32
-Pygments==2.2.0
+Pygments==2.7.4
 pytest-mock==1.5.0
 pytest==3.0.5
 simplegeneric==0.8.1
