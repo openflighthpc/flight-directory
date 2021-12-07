@@ -28,8 +28,8 @@
 
 # Install Python 3 and Virtualenv.
 sudo yum install -y https://repo.ius.io/ius-release-el7.rpm
-sudo yum install -y python35u python35u-pip
-sudo pip3.5 install virtualenv
+sudo yum install -y python36 python36-pip
+sudo pip3.6 install virtualenv
 sudo yum remove -y ius-release
 
 # Setup Virtualenv.
