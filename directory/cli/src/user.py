@@ -64,6 +64,7 @@ USER_SHOW_FIELD_CONFIGS.update([
 ])
 
 USER_BLACKLIST = ['admin', 'alces-cluster']
+USER_BLACKLIST.extend(utils.user_blacklist())
 
 def add_commands(directory):
 
