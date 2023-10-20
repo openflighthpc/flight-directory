@@ -56,6 +56,26 @@ def directory_config():
             .format(CONFIG.APPLIANCE_CONFIG)
         )
 
+def group_blacklist():
+    try:
+        groups = directory_config()['GROUP_BLACKLIST']
+        if groups == None:
+            return []
+        else:
+            return groups.split(',')
+    except:
+        return []
+
+def user_blacklist():
+    try:
+        users = directory_config()['USER_BLACKLIST']
+        if users == None:
+            return []
+        else:
+            return users.split(',')
+    except:
+        return []
+
 def get_user_config(conf_variable):
     # only even try read it if file exists, to allow backwards compatability
     if detect_user_config():

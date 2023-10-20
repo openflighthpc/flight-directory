@@ -62,6 +62,7 @@ GROUP_BLACKLIST = [
         'clusterusers',
         'alces-cluster'
     ]
+GROUP_BLACKLIST.extend(utils.group_blacklist())
 
 def add_commands(directory):
 
