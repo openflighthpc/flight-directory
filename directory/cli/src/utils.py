@@ -42,7 +42,7 @@ def obtain_kerberos_ticket():
     # TODO: apparently this is a bad idea, consider using keytab - refer to:
     # http://stackoverflow.com/questions/8144596/kerberos-kinit-enter-password-without-prompt.
     password = directory_config()[CONFIG.PASSWORD_KEY]
-    kinit_command = 'echo {} | kinit admin'.format(password),
+    kinit_command = 'echo {} | kinit admin'.format(shlex.quote(password)),
     appliance_cli.utils.run(kinit_command, shell=True)
 
 
